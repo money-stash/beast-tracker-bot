@@ -10,7 +10,3 @@ class User(Base):
     reg_date = Column(String)
     first_name = Column(String)
     username = Column(String)
-
-    tasks = relationship(
-        "DailyTask", back_populates="user", cascade="all, delete-orphan"
-    )

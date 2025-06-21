@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from models.base import Base
 from utils.logger import logger
+from utils.time_utils import get_us_date
 
 from models.user import User
 
@@ -46,20 +47,24 @@ class Database:
     ##########      User methods        ##########
     ##########                          ##########
 
-    async def create_user(
-        self, reg_date: str, user_id: int, first_name: str, username: str
-    ):
+    async def create_user(self, user_id: int, first_name: str, username: str):
         async with self.get_session() as session:
-            user = User(
-                user_id=user_id,
-                first_name=first_name,
-                username=username,
-                reg_date=reg_date,
-            )
-            session.add(user)
-            await session.commit()
+            result = await session.execute(select(User).where(User.user_id == user_id))
+            user = result.scalar_one_or_none()
+            reg_date = get_us_date()
 
-            logger.info(f"User {user_id} created")
+            if user is None:
+                user = User(
+                    user_id=user_id,
+                    first_name=first_name,
+                    username=username,
+                    reg_date=reg_date,
+                )
+                session.add(user)
+                await session.commit()
+                logger.info(f"User {user_id} created")
+            else:
+                logger.info(f"User {user_id} already exists")
 
     async def get_users(self) -> list[User]:
         async with self.get_session() as session:

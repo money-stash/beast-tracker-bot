@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 
-from handlers import user_commands
+from handlers.user import user_commands
 
 from database.db import db
 from config import TOKEN
