@@ -1,15 +1,13 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import Message
 
 from database.db import db
-from config import DB_PATH
 
 router = Router()
 
 
 @router.message(F.text == "/start")
-async def start_func(msg: Message):
-    user_id = msg.from_user.id
+async def start_func(msg: Message, bot: Bot, user_id: int):
     first_name = msg.from_user.first_name
     username = msg.from_user.username
 

@@ -2,6 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from handlers.user import user_commands
+from middlewares.user_info import UserInfoMiddleware
 
 from database.db import db
 from config import TOKEN
@@ -12,6 +13,9 @@ async def main():
 
     bot = Bot(TOKEN)
     dp = Dispatcher()
+
+    dp.message.outer_middleware(UserInfoMiddleware())
+    dp.callback_query.outer_middleware(UserInfoMiddleware())
 
     dp.include_routers(
         user_commands.router,
