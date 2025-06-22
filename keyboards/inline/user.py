@@ -3,10 +3,14 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     kb_btns = [
-        [InlineKeyboardButton(text="‼️ Daily", callback_data="daily_tasks")],
-        [InlineKeyboardButton(text="⚖️ Weekly", callback_data="weekly_tasks")],
-        [InlineKeyboardButton(text="🔔 Remainders", callback_data="my_remainders")],
-        [InlineKeyboardButton(text="👤 Profile", callback_data="profile")],
+        [
+            InlineKeyboardButton(text="‼️ Daily", callback_data="daily_tasks"),
+            InlineKeyboardButton(text="⚖️ Weekly", callback_data="weekly_tasks"),
+        ],
+        [
+            InlineKeyboardButton(text="🔔 Remainders", callback_data="my_remainders"),
+            InlineKeyboardButton(text="👤 Profile", callback_data="profile"),
+        ],
     ]
     if is_admin:
         kb_btns.append(

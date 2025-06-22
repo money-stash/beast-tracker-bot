@@ -4,18 +4,25 @@ from aiogram.types import CallbackQuery
 from keyboards.inline.user import get_daily_menu, get_main_menu
 
 from database.db import db
+from config import ADMIN_ID
 
 
 router = Router()
 
 
 @router.callback_query(F.data == "back_to_main")
-async def back_to_main(call: CallbackQuery, bot: Bot):
+async def back_to_main(call: CallbackQuery, bot: Bot, user_id: int):
+
+    if user_id == ADMIN_ID:
+        kb = await get_main_menu(is_admin=True)
+    else:
+        kb = await get_main_menu(is_admin=False)
+
     await bot.edit_message_text(
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         text=f"👋 Hi, <b>{call.from_user.full_name}</b>",
-        reply_markup=await get_main_menu(),
+        reply_markup=kb,
         parse_mode="html",
     )
 
