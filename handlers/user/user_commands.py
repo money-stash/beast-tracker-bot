@@ -2,6 +2,7 @@ from aiogram import Router, F, Bot
 from aiogram.types import Message
 
 from database.db import db
+from keyboards.inline.user import get_main_menu
 
 router = Router()
 
@@ -16,4 +17,5 @@ async def start_func(msg: Message, bot: Bot, user_id: int):
     await msg.answer(
         text=f"👋 Hi, <b>{msg.from_user.full_name}</b>",
         parse_mode="html",
+        reply_markup=await get_main_menu(),
     )

@@ -9,6 +9,9 @@ from utils.logger import logger
 from utils.time_utils import get_us_date
 
 from models.user import User
+from models.daily_task import DailyTask
+from models.daily_history import DailyHistory
+from models.weekly_task import WeeklyTask
 
 from config import DB_PATH
 
@@ -96,6 +99,104 @@ class Database:
         async with self.get_session() as session:
             await session.execute(delete(User).where(User.user_id == user_id))
             await session.commit()
+
+    ##########                          ##########
+    ##########      Daily tasks         ##########
+    ##########                          ##########
+
+    # set is_done to False for all tasks
+    async def cleanup_daily_tasks(self):
+        async with self.get_session() as session:
+            tasks_result = await session.execute(select(DailyTask))
+            tasks = tasks_result.scalars().all()
+
+            now_date = datetime.now(timezone("Europe/Kyiv")).strftime("%Y-%m-%d")
+
+            for task in tasks:
+                history = DailyHistory(
+                    user_id=task.user_id,
+                    task_id=task.id,
+                    date=now_date,
+                    is_done=task.is_done,
+                )
+                session.add(history)
+
+            await session.execute(update(DailyTask).values(is_done=False))
+            await session.commit()
+
+            logger.info("Daily tasks cleaned up and history saved")
+
+    async def create_daily_task(self, user_id: int, task_text: str, date: str):
+        async with self.get_session() as session:
+            task = DailyTask(user_id=user_id, daily_task=task_text, created_date=date)
+            session.add(task)
+            await session.commit()
+
+            logger.info(f"Daily task created for user {user_id}")
+
+    async def get_daily_tasks(self, user_id: int) -> list[DailyTask]:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(DailyTask).where(DailyTask.user_id == user_id)
+            )
+            return result.scalars().all()
+
+    async def get_daily_task(self, task_id: int) -> DailyTask | None:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(DailyTask).where(DailyTask.id == task_id)
+            )
+            return result.scalar_one_or_none()
+
+    async def mark_task_done(self, task_id: int, done_status: bool):
+        async with self.get_session() as session:
+            await session.execute(
+                update(DailyTask)
+                .where(DailyTask.id == task_id)
+                .values(is_done=done_status)
+            )
+            await session.commit()
+
+            logger.info(f"Task {task_id} marked as done")
+
+    async def delete_task(self, task_id: int):
+        async with self.get_session() as session:
+            await session.execute(delete(DailyTask).where(DailyTask.id == task_id))
+            await session.commit()
+
+            logger.info(f"Task {task_id} deleted")
+
+    async def back_daily_to_history(self):
+        async with self.get_session() as session:
+            users = await self.get_users()
+            for user in users:
+                all_tasks = await self.get_daily_tasks(user.user_id)
+                for task in all_tasks:
+                    if task.is_done:
+                        history = DailyHistory(
+                            user_id=user.user_id,
+                            task_id=task.id,
+                            date=datetime.now(timezone("Europe/Kyiv")).strftime(
+                                "%Y-%m-%d"
+                            ),
+                            is_done=True,
+                        )
+                        session.add(history)
+                        await session.commit()
+
+                        await self.mark_task_done(task.id, False)
+            logger.info("Daily tasks moved to history")
+
+    async def daily_user_remainder(self, user_id: int):
+        async with self.get_session() as session:
+            user_tasks = await self.get_daily_tasks(user_id)
+            unfinished_tasks = []
+
+            for task in user_tasks:
+                if not task.is_done:
+                    unfinished_tasks.append(task)
+
+            return unfinished_tasks
 
 
 db = Database()
