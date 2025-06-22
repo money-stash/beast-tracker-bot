@@ -3,6 +3,7 @@ from aiogram.types import Message
 
 from database.db import db
 from keyboards.inline.user import get_main_menu
+from config import ADMIN_ID
 
 router = Router()
 
@@ -14,8 +15,13 @@ async def start_func(msg: Message, bot: Bot, user_id: int):
 
     await db.create_user(user_id, first_name, username)
 
+    if user_id == ADMIN_ID:
+        kb = await get_main_menu(is_admin=True)
+    else:
+        kb = await get_main_menu()
+
     await msg.answer(
         text=f"👋 Hi, <b>{msg.from_user.full_name}</b>",
         parse_mode="html",
-        reply_markup=await get_main_menu(),
+        reply_markup=kb,
     )

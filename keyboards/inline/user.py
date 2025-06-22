@@ -1,13 +1,17 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-async def get_main_menu() -> InlineKeyboardMarkup:
+async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     kb_btns = [
         [InlineKeyboardButton(text="‼️ Daily", callback_data="daily_tasks")],
         [InlineKeyboardButton(text="⚖️ Weekly", callback_data="weekly_tasks")],
         [InlineKeyboardButton(text="🔔 Remainders", callback_data="my_remainders")],
         [InlineKeyboardButton(text="👤 Profile", callback_data="profile")],
     ]
+    if is_admin:
+        kb_btns.append(
+            [InlineKeyboardButton(text="👩‍💼 Admin panel", callback_data="open_admin")]
+        )
 
     kb = InlineKeyboardMarkup(inline_keyboard=kb_btns, resize_keyboard=True)
     return kb
