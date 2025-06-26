@@ -198,5 +198,20 @@ class Database:
 
             return unfinished_tasks
 
+    async def count_users_completed_all_tasks_today(self) -> int:
+        async with self.get_session() as session:
+            users = await self.get_users()
+            completed_users = 0
+
+            for user in users:
+                result = await session.execute(
+                    select(DailyTask).where(DailyTask.user_id == user.user_id)
+                )
+                tasks = result.scalars().all()
+                if tasks and all(task.is_done for task in tasks):
+                    completed_users += 1
+
+            return completed_users
+
 
 db = Database()

@@ -13,7 +13,12 @@ from callbacks.user import (
     delete_daily_task,
     set_done_daily,
 )
-from callbacks.admin import open_admin, open_group_settings, change_group
+from callbacks.admin import (
+    open_admin,
+    open_group_settings,
+    change_group,
+    open_dashboard,
+)
 
 from middlewares.user_info import UserInfoMiddleware
 
@@ -42,6 +47,7 @@ async def main():
         open_admin.router,
         open_group_settings.router,
         change_group.router,
+        open_dashboard.router,
     )
 
     await bot.delete_webhook(drop_pending_updates=True)
