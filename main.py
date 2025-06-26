@@ -1,5 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
+from aiogram.enums.parse_mode import ParseMode
+from aiogram.client.default import DefaultBotProperties
 
 from handlers.user import user_commands
 from callbacks.user import (
@@ -11,7 +13,7 @@ from callbacks.user import (
     delete_daily_task,
     set_done_daily,
 )
-from callbacks.admin import open_admin
+from callbacks.admin import open_admin, open_group_settings, change_group
 
 from middlewares.user_info import UserInfoMiddleware
 
@@ -22,7 +24,7 @@ from config import TOKEN
 async def main():
     await db.init_models()
 
-    bot = Bot(TOKEN)
+    bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
 
     dp.message.outer_middleware(UserInfoMiddleware())
@@ -38,6 +40,8 @@ async def main():
         delete_daily_task.router,
         set_done_daily.router,
         open_admin.router,
+        open_group_settings.router,
+        change_group.router,
     )
 
     await bot.delete_webhook(drop_pending_updates=True)

@@ -15,3 +15,13 @@ async def open_admion_menu(call: CallbackQuery, bot: Bot, user_id: int):
         text="👩‍💼 You opened admin panel",
         reply_markup=await get_admin_menu(),
     )
+
+
+@router.callback_query(F.data == "back_to_admin")
+async def open_back_to_admin(call: CallbackQuery, bot: Bot, user_id: int):
+    await bot.edit_message_text(
+        chat_id=user_id,
+        message_id=call.message.message_id,
+        text="👩‍💼 You opened admin panel",
+        reply_markup=await get_admin_menu(),
+    )
