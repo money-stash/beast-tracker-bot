@@ -18,6 +18,9 @@ from callbacks.admin import (
     open_group_settings,
     change_group,
     open_dashboard,
+    cancel_admin,
+    open_mem_directory,
+    ban_user,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -48,6 +51,9 @@ async def main():
         open_group_settings.router,
         change_group.router,
         open_dashboard.router,
+        cancel_admin.router,
+        open_mem_directory.router,
+        ban_user.router,
     )
 
     await bot.delete_webhook(drop_pending_updates=True)

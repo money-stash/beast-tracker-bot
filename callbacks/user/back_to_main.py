@@ -1,5 +1,6 @@
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
+from aiogram.fsm.context import FSMContext
 
 from keyboards.inline.user import get_daily_menu, get_main_menu
 

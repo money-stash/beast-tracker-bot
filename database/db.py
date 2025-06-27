@@ -79,6 +79,25 @@ class Database:
             result = await session.execute(select(User).where(User.user_id == user_id))
             return result.scalar_one_or_none()
 
+    async def find_user(self, identifier: str):
+        if identifier.isdigit():
+            user = await self.get_user(int(identifier))
+            return user if user else False
+
+        if identifier.startswith("https://t.me/"):
+            username = identifier.split("/")[-1]
+        elif identifier.startswith("@"):
+            username = identifier[1:]
+        else:
+            username = identifier
+
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(User).where(User.username == username)
+            )
+            user = result.scalar_one_or_none()
+            return user if user else False
+
     async def update_user_balance(self, user_id: int, balance: float):
         async with self.get_session() as session:
             await session.execute(
@@ -99,6 +118,14 @@ class Database:
         async with self.get_session() as session:
             await session.execute(delete(User).where(User.user_id == user_id))
             await session.commit()
+
+    async def ban_user(self, user_id: int, banned: bool):
+        async with self.get_session() as session:
+            await session.execute(
+                update(User).where(User.user_id == user_id).values(banned=banned)
+            )
+            await session.commit()
+            logger.info(f"User {user_id} banned={banned}")
 
     ##########                          ##########
     ##########      Daily tasks         ##########

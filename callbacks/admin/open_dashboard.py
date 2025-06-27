@@ -23,7 +23,7 @@ async def print_open_dashboard(call: CallbackQuery, bot: Bot, user_id: int):
         percentage = (
             (completed_all_tasks_today / members_count * 100) if total_users else 0
         )
-        text += f"✅ All completed: {completed_all_tasks_today} ({percentage:.0f}%)"
+        text += f"✅ All completed: {completed_all_tasks_today} ({percentage:.0f}%)\n"
         text += f"Longest active streak: none"
 
         await bot.edit_message_text(

@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message
 
 from database.db import db
 from states.admin import ChangeGroup
-from keyboards.inline.admin import get_back_to_admin
+from keyboards.inline.admin import get_back_to_admin, get_cancel_admin
 from utils.json_utils import get_group_id, update_group_id
 
 router = Router()
@@ -21,6 +21,7 @@ async def start_change_group(
         chat_id=user_id,
         message_id=call.message.message_id,
         text=f"First open the bot @getmy_idbot and get your group id.\nOld group_id: <code>{get_group_id()}</code>\nEnter new group id",
+        reply_markup=await get_cancel_admin(),
     )
     await state.update_data({"msg_id": call.message.message_id})
     await state.set_state(ChangeGroup.new_group_id)
@@ -54,5 +55,10 @@ async def end_change_group(msg: Message, bot: Bot, state: FSMContext, user_id: i
             reply_markup=await get_back_to_admin(),
         )
     except Exception as e:
-        await msg.answer(f"❌ failed to access group\n{e}")
+        await bot.edit_message_text(
+            chat_id=user_id,
+            message_id=data["msg_id"],
+            text=f"❌ failed to access group\n{e}\ntry write again",
+            reply_markup=await get_cancel_admin(),
+        )
         return
