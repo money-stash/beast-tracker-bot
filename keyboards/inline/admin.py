@@ -14,6 +14,60 @@ async def get_admin_menu():
                 text="👥 Group settings", callback_data="open_group_settings"
             )
         ],
+        [
+            InlineKeyboardButton(
+                text="👥 Accountability Partner Manager",
+                callback_data="open_partner_menager",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Check-In Management",
+                callback_data="open_check_menagement",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🥇 Leaderboards & Achievements",
+                callback_data="open_leaderboard",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Mini-Challenge Control Center",
+                callback_data="open_challenges_control",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Daily Motivation Broadcast",
+                callback_data="open_motivation",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📫 Messaging Center",
+                callback_data="open_messages_center",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⚙️ Settings & Customization",
+                callback_data="open_settings",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🖨️ Export & Reports",
+                callback_data="open_export",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🔑 Admin Roles & Permissions",
+                callback_data="open_admin_permission",
+            )
+        ],
         [InlineKeyboardButton(text="🔙 Main menu", callback_data="back_to_main")],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)

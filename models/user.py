@@ -13,6 +13,7 @@ class User(Base):
     health_balance = Column(Float, default=0)
     is_baned = Column(Boolean, default=False)
     dme_top = Column(Integer, default=0)
+    partner_id = Column(Integer, default=0)
 
     tasks = relationship(
         "DailyTask", back_populates="user", cascade="all, delete-orphan"
