@@ -17,7 +17,7 @@ async def get_admin_menu():
         [
             InlineKeyboardButton(
                 text="👥 Accountability Partner Manager",
-                callback_data="open_partner_menager",
+                callback_data="open_partner_manager",
             )
         ],
         [
@@ -34,13 +34,13 @@ async def get_admin_menu():
         ],
         [
             InlineKeyboardButton(
-                text="Mini-Challenge Control Center",
+                text="🎯 Mini-Challenge Control Center",
                 callback_data="open_challenges_control",
             )
         ],
         [
             InlineKeyboardButton(
-                text="Daily Motivation Broadcast",
+                text="🏋️‍♀️ Daily Motivation Broadcast",
                 callback_data="open_motivation",
             )
         ],
@@ -128,6 +128,113 @@ async def get_mem_user_menu(user_id: int):
             InlineKeyboardButton(
                 text="👥 Assign accountability partner manually",
                 callback_data=f"add_parthner_{user_id}",
+            )
+        ],
+        [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard
+
+
+async def get_admin_settings_menu():
+    kb = [
+        [
+            InlineKeyboardButton(
+                text="⏰ Set DME check-in hours", callback_data="set_dme_hours"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🚀 Define streak milestone triggers",
+                callback_data="strak_triggers",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="♻️ Configure partner rotation frequency",
+                callback_data="partnet_rotation",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📤 Upload branded images/graphics for auto-posts",
+                callback_data="image_autopost",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🗓️ Adjust Wall of Fame posting date/time",
+                callback_data="asdasdasd",
+            )
+        ],
+        [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard
+
+
+async def get_daily_motivation_menu():
+    kb = [
+        [InlineKeyboardButton(text="🧭 Schedule", callback_data="schedule_message")],
+        [
+            InlineKeyboardButton(
+                text="💬 Send manual messages", callback_data="schedule_message"
+            )
+        ],
+        [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard
+
+
+async def get_message_center_menu():
+    kb = [
+        [InlineKeyboardButton(text="✉️ Send DM", callback_data="send_dm")],
+        [
+            InlineKeyboardButton(
+                text="📢 Broadcast to specific segments", callback_data="asdasd"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🗂️ Template manager ", callback_data="template_manager"
+            )
+        ],
+        [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard
+
+
+async def get_partner_menager():
+    kb = [
+        [
+            InlineKeyboardButton(
+                text="Current pairing view", callback_data="current_partners"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Re-pair individuals or full-group reassign",
+                callback_data="reload_partners",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Trigger 1-on-1 check-ins between partners",
+                callback_data="partners_versus",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="See partner nudges sent / received",
+                callback_data="partners_nudges",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Set next auto-rotation date",
+                callback_data="set_partners_auto_rotation",
             )
         ],
         [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
