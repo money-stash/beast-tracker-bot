@@ -9,8 +9,7 @@ from aiogram.fsm.context import FSMContext
 
 
 from database.db import db
-from states.admin import BanUser
-from keyboards.inline.admin import get_cancel_admin, get_back_to_admin
+from keyboards.inline.admin import get_back_to_admin
 
 router = Router()
 

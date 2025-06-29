@@ -12,6 +12,7 @@ from models.user import User
 from models.daily_task import DailyTask
 from models.daily_history import DailyHistory
 from models.weekly_task import WeeklyTask
+from models.challenge import MiniChallenge
 
 from config import DB_PATH
 
@@ -122,10 +123,36 @@ class Database:
     async def ban_user(self, user_id: int, banned: bool):
         async with self.get_session() as session:
             await session.execute(
-                update(User).where(User.user_id == user_id).values(banned=banned)
+                update(User).where(User.user_id == user_id).values(is_baned=banned)
             )
             await session.commit()
             logger.info(f"User {user_id} banned={banned}")
+
+    ##########                          ##########
+    ##########    MiniChallenge CRUD    ##########
+    ##########                          ##########
+
+    async def add_challenge(self, name: str, duration: int, rules: str, action: str):
+        async with self.get_session() as session:
+            challenge = MiniChallenge(
+                name=name, duration=duration, rules=rules, action=action
+            )
+            session.add(challenge)
+            await session.commit()
+            logger.info(f"Challenge '{name}' added")
+
+    async def delete_challenge(self, name: str):
+        async with self.get_session() as session:
+            await session.execute(
+                delete(MiniChallenge).where(MiniChallenge.name == name)
+            )
+            await session.commit()
+            logger.info(f"Challenge '{name}' deleted")
+
+    async def get_all_challenges(self) -> list[MiniChallenge]:
+        async with self.get_session() as session:
+            result = await session.execute(select(MiniChallenge))
+            return result.scalars().all()
 
     ##########                          ##########
     ##########      Daily tasks         ##########

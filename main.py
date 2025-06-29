@@ -31,13 +31,16 @@ from callbacks.admin import (
     open_messages_center,
     open_partner_manager,
     change_partnet_rotation,
+    send_dm,
+    open_challenges_control,
+    add_challenge,
 )
 
 from middlewares.user_info import UserInfoMiddleware
 from utils.remainders import shchedule_daily_remainders
 
 from database.db import db
-from config import TOKEN, ADMIN_ID
+from config import TOKEN
 
 
 async def scheduled_task(bot: Bot):
@@ -74,6 +77,9 @@ async def main():
         open_messages_center.router,
         open_partner_manager.router,
         change_partnet_rotation.router,
+        send_dm.router,
+        open_challenges_control.router,
+        add_challenge.router,
     )
 
     us_tz = timezone("America/New_York")

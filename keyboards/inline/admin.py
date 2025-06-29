@@ -241,3 +241,26 @@ async def get_partner_menager():
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     return keyboard
+
+
+async def get_challenges_menu(challenges):
+    kb = []
+
+    for challenge in challenges:
+        kb.append(
+            [InlineKeyboardButton(text=challenge.name, callback_data=str(challenge.id))]
+        )
+
+    kb.append(
+        [
+            InlineKeyboardButton(
+                text="➕ Add new challenge", callback_data="add_new_challenge"
+            )
+        ],
+    )
+    kb.append(
+        [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
+    )
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard
