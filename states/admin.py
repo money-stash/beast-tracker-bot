@@ -11,3 +11,8 @@ class FindUserMem(StatesGroup):
 
 class BanUser(StatesGroup):
     user_identy = State()
+
+
+# partner rotation frequency
+class RotFreq(StatesGroup):
+    new_freq = State()

@@ -152,7 +152,7 @@ async def get_admin_settings_menu():
         [
             InlineKeyboardButton(
                 text="♻️ Configure partner rotation frequency",
-                callback_data="partnet_rotation",
+                callback_data="change_partnet_rotation",
             )
         ],
         [

@@ -30,6 +30,7 @@ from callbacks.admin import (
     open_daily_motivation,
     open_messages_center,
     open_partner_manager,
+    change_partnet_rotation,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -72,6 +73,7 @@ async def main():
         open_daily_motivation.router,
         open_messages_center.router,
         open_partner_manager.router,
+        change_partnet_rotation.router,
     )
 
     us_tz = timezone("America/New_York")
