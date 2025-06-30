@@ -1,3 +1,5 @@
+from random import randint
+
 from pytz import timezone
 from datetime import datetime
 from sqlalchemy import select, update, delete
@@ -134,25 +136,33 @@ class Database:
 
     async def add_challenge(self, name: str, duration: int, rules: str, action: str):
         async with self.get_session() as session:
+            rand_id = randint(1, 1000000)
             challenge = MiniChallenge(
-                name=name, duration=duration, rules=rules, action=action
+                id=rand_id, name=name, duration=duration, rules=rules, action=action
             )
             session.add(challenge)
             await session.commit()
             logger.info(f"Challenge '{name}' added")
 
-    async def delete_challenge(self, name: str):
+    async def delete_challenge(self, challenge_id: int):
         async with self.get_session() as session:
             await session.execute(
-                delete(MiniChallenge).where(MiniChallenge.name == name)
+                delete(MiniChallenge).where(MiniChallenge.id == challenge_id)
             )
             await session.commit()
-            logger.info(f"Challenge '{name}' deleted")
+            logger.info(f"Challenge with id {challenge_id} deleted")
 
     async def get_all_challenges(self) -> list[MiniChallenge]:
         async with self.get_session() as session:
             result = await session.execute(select(MiniChallenge))
             return result.scalars().all()
+
+    async def get_challenge_by_id(self, challenge_id: int) -> MiniChallenge | None:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(MiniChallenge).where(MiniChallenge.id == challenge_id)
+            )
+            return result.scalar_one_or_none()
 
     ##########                          ##########
     ##########      Daily tasks         ##########

@@ -34,6 +34,8 @@ from callbacks.admin import (
     send_dm,
     open_challenges_control,
     add_challenge,
+    open_admin_challenge,
+    delete_challenge,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -80,6 +82,8 @@ async def main():
         send_dm.router,
         open_challenges_control.router,
         add_challenge.router,
+        open_admin_challenge.router,
+        delete_challenge.router,
     )
 
     us_tz = timezone("America/New_York")

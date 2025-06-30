@@ -248,7 +248,12 @@ async def get_challenges_menu(challenges):
 
     for challenge in challenges:
         kb.append(
-            [InlineKeyboardButton(text=challenge.name, callback_data=str(challenge.id))]
+            [
+                InlineKeyboardButton(
+                    text=challenge.name,
+                    callback_data=f"open_admin_challenge_{challenge.id}",
+                )
+            ]
         )
 
     kb.append(

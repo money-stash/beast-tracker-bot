@@ -4,7 +4,6 @@ from aiogram.types import CallbackQuery
 
 from database.db import db
 from keyboards.inline.admin import get_challenges_menu
-from utils.json_utils import get_group_id, update_group_id
 
 router = Router()
 
