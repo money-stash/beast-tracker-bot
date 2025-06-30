@@ -8,6 +8,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
+
 from handlers.user import user_commands
 from callbacks.user import (
     open_profile,
@@ -17,6 +18,9 @@ from callbacks.user import (
     add_daily_task,
     delete_daily_task,
     set_done_daily,
+    user_challenges,
+    open_user_challenge,
+    exec_challenge,
 )
 from callbacks.admin import (
     open_admin,
@@ -84,6 +88,9 @@ async def main():
         add_challenge.router,
         open_admin_challenge.router,
         delete_challenge.router,
+        user_challenges.router,
+        open_user_challenge.router,
+        exec_challenge.router,
     )
 
     us_tz = timezone("America/New_York")

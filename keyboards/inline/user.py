@@ -5,7 +5,7 @@ async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     kb_btns = [
         [
             InlineKeyboardButton(text="‼️ Daily", callback_data="daily_tasks"),
-            InlineKeyboardButton(text="⚖️ Weekly", callback_data="weekly_tasks"),
+            InlineKeyboardButton(text="🎯 Challenges", callback_data="user_challenges"),
         ],
         [
             InlineKeyboardButton(text="🔔 Remainders", callback_data="my_remainders"),
@@ -79,3 +79,24 @@ async def get_daily_ok() -> InlineKeyboardMarkup:
 
     kb = InlineKeyboardMarkup(inline_keyboard=kb_btns, resize_keyboard=True)
     return kb
+
+
+async def get_challenges_menu(challenges):
+    kb = []
+
+    for challenge in challenges:
+        kb.append(
+            [
+                InlineKeyboardButton(
+                    text=challenge.name,
+                    callback_data=f"open_user_challenge_{challenge.id}",
+                )
+            ]
+        )
+
+    kb.append(
+        [InlineKeyboardButton(text="🔙 Main menu", callback_data="back_to_main")],
+    )
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard

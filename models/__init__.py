@@ -3,6 +3,8 @@ from .daily_task import DailyTask
 from .daily_history import DailyHistory
 from .weekly_task import WeeklyTask
 from .challenge import MiniChallenge
+from .challenges_history import ChallengeHistory
+
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

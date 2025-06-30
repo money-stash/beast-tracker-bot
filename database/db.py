@@ -12,9 +12,10 @@ from utils.time_utils import get_us_date
 
 from models.user import User
 from models.daily_task import DailyTask
-from models.daily_history import DailyHistory
 from models.weekly_task import WeeklyTask
 from models.challenge import MiniChallenge
+from models.daily_history import DailyHistory
+from models.challenges_history import ChallengeHistory
 
 from config import DB_PATH
 
@@ -87,12 +88,14 @@ class Database:
             user = await self.get_user(int(identifier))
             return user if user else False
 
+        identifier = identifier.strip()
+
         if identifier.startswith("https://t.me/"):
             username = identifier.split("/")[-1]
         elif identifier.startswith("@"):
             username = identifier[1:]
         else:
-            username = identifier
+            username = identifier.lstrip("@")
 
         async with self.get_session() as session:
             result = await session.execute(
@@ -276,6 +279,55 @@ class Database:
                     completed_users += 1
 
             return completed_users
+
+    ##########                                  ##########
+    ##########    ChallengeHistory methods       ##########
+    ##########                                  ##########
+
+    async def upsert_challenge_history(
+        self, challenge_id: int, user_id: int, executed: bool
+    ):
+        async with self.get_session() as session:
+            current_date = datetime.now(timezone("Europe/Kyiv")).strftime("%Y-%m-%d")
+            result = await session.execute(
+                select(ChallengeHistory).where(
+                    ChallengeHistory.challenge_id == challenge_id,
+                    ChallengeHistory.user_id == user_id,
+                    ChallengeHistory.date == current_date,
+                )
+            )
+            entry = result.scalar_one_or_none()
+
+            if entry:
+                entry.is_executed = executed
+            else:
+                entry = ChallengeHistory(
+                    challenge_id=challenge_id,
+                    user_id=user_id,
+                    date=current_date,
+                    is_executed=executed,
+                )
+                session.add(entry)
+
+            await session.commit()
+            logger.info(
+                f"Challenge history updated: user={user_id}, challenge={challenge_id}, executed={executed}"
+            )
+
+    async def is_challenge_executed_today(
+        self, challenge_id: int, user_id: int
+    ) -> bool:
+        async with self.get_session() as session:
+            current_date = datetime.now(timezone("Europe/Kyiv")).strftime("%Y-%m-%d")
+            result = await session.execute(
+                select(ChallengeHistory).where(
+                    ChallengeHistory.challenge_id == challenge_id,
+                    ChallengeHistory.user_id == user_id,
+                    ChallengeHistory.date == current_date,
+                )
+            )
+            entry = result.scalar_one_or_none()
+            return entry.is_executed if entry else False
 
 
 db = Database()

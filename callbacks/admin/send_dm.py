@@ -1,6 +1,3 @@
-from pytz import timezone
-from datetime import datetime
-
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -8,9 +5,28 @@ from aiogram.types import CallbackQuery, Message
 from database.db import db
 from states.admin import SendDmAdmin
 from keyboards.inline.admin import get_back_to_admin, get_cancel_admin
-from utils.json_utils import get_group_id, update_group_id
 
 router = Router()
+
+
+@router.callback_query(F.data.startswith("send_manual_message_"))
+async def start_send_dm_to_user(
+    call: CallbackQuery, bot: Bot, state: FSMContext, user_id: int
+):
+    picked_id = call.data.split("send_manual_message_")[-1]
+    is_user = await db.find_user(picked_id)
+
+    await state.update_data({"msg_id": call.message.message_id})
+    await state.update_data({"user_dm_id": picked_id})
+
+    await state.set_state(SendDmAdmin.message_text)
+
+    await bot.edit_message_text(
+        chat_id=user_id,
+        message_id=call.message.message_id,
+        text=f"✏️ Write message text for user {is_user.first_name}({is_user.username})",
+        reply_markup=await get_cancel_admin(),
+    )
 
 
 @router.callback_query(F.data == "send_dm")
