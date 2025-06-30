@@ -329,5 +329,34 @@ class Database:
             entry = result.scalar_one_or_none()
             return entry.is_executed if entry else False
 
+    async def check_all_challenges_today(self):
+        async with self.get_session() as session:
+            users = await self.get_users()
+            challenges = await self.get_all_challenges()
+            logger.info(
+                f"Checking challenges for {len(users)} users and {len(challenges)} challenges"
+            )
+
+            for user in users:
+                for challenge in challenges:
+                    result = await session.execute(
+                        select(ChallengeHistory).where(
+                            ChallengeHistory.challenge_id == challenge.id,
+                            ChallengeHistory.user_id == user.user_id,
+                            ChallengeHistory.date
+                            == datetime.now(timezone("Europe/Kyiv")).strftime(
+                                "%Y-%m-%d"
+                            ),
+                        )
+                    )
+                    exists = result.scalar_one_or_none()
+                    if not exists:
+                        await self.upsert_challenge_history(
+                            challenge.id, user.user_id, False
+                        )
+                        logger.info(
+                            f"Marked as not executed: user={user.user_id}, challenge={challenge.id}"
+                        )
+
 
 db = Database()

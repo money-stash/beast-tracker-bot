@@ -93,7 +93,7 @@ async def main():
         exec_challenge.router,
     )
 
-    us_tz = timezone("America/New_York")
+    us_tz = timezone("Europe/Kyiv")
 
     scheduler = AsyncIOScheduler(timezone=us_tz)
     scheduler.add_job(
@@ -101,6 +101,9 @@ async def main():
     )
     scheduler.add_job(
         db.back_daily_to_history, CronTrigger(hour=23, minute=59, timezone=us_tz)
+    )
+    scheduler.add_job(
+        db.check_all_challenges_today, CronTrigger(hour=23, minute=59, timezone=us_tz)
     )
     scheduler.add_job(
         shchedule_daily_remainders,
