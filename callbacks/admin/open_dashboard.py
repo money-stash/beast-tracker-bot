@@ -16,6 +16,8 @@ async def print_open_dashboard(call: CallbackQuery, bot: Bot, user_id: int):
         chat = await bot.get_chat(group_id)
         members_count = await bot.get_chat_member_count(group_id) - 1
 
+        max_streak = await db.get_user_with_longest_daily_streak()
+
         text = f"📊 You opened <b>Dashboard Overview</b>\n\n"
         text += f"👥 Total users: {members_count}\n"
         completed_all_tasks_today = await db.count_users_completed_all_tasks_today()
@@ -24,7 +26,7 @@ async def print_open_dashboard(call: CallbackQuery, bot: Bot, user_id: int):
             (completed_all_tasks_today / members_count * 100) if total_users else 0
         )
         text += f"✅ All completed: {completed_all_tasks_today} ({percentage:.0f}%)\n"
-        text += f"Longest active streak: none"
+        text += f"Longest active streak: <b>{max_streak['max_streak']} days </b> ({max_streak['user_id']} @{max_streak['username']})"
 
         await bot.edit_message_text(
             chat_id=user_id,

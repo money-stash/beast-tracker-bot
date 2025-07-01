@@ -1,5 +1,6 @@
 from aiogram import Bot
 from database.db import db
+from middlewares.user import get_daily_ok
 
 
 async def send_schedul_msg(bot: Bot, msg_id):
@@ -13,6 +14,7 @@ async def send_schedul_msg(bot: Bot, msg_id):
                 await bot.send_message(
                     chat_id=user.user_id,
                     text=msg_info.text,
+                    reply_markup=await get_daily_ok(),
                 )
             except Exception as ex:
                 print(f"ERROR WHILE SEND SCHEDULED MESSAGE: {ex}")

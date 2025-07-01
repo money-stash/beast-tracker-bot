@@ -41,6 +41,7 @@ from callbacks.admin import (
     open_scheduled_messages,
     schedule_msg_info,
     delete_scheduled,
+    user_full_history,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -97,6 +98,7 @@ async def main():
         open_scheduled_messages.router,
         schedule_msg_info.router,
         delete_scheduled.router,
+        user_full_history.router,
     )
 
     scheduler.add_job(
@@ -105,6 +107,7 @@ async def main():
     scheduler.add_job(
         db.back_daily_to_history, CronTrigger(hour=23, minute=59, timezone=us_tz)
     )
+    await db.back_daily_to_history()
     scheduler.add_job(
         db.check_all_challenges_today, CronTrigger(hour=23, minute=59, timezone=us_tz)
     )

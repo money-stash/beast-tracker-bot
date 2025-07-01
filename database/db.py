@@ -1,3 +1,7 @@
+import os
+import csv
+from tempfile import gettempdir
+
 from random import randint
 
 from pytz import timezone
@@ -245,7 +249,7 @@ class Database:
                         history = DailyHistory(
                             user_id=user.user_id,
                             task_id=task.id,
-                            date=datetime.now(timezone(us_tz)).strftime("%Y-%m-%d"),
+                            date=datetime.now(us_tz).strftime("%Y-%m-%d"),
                             is_done=True,
                         )
                         session.add(history)
@@ -288,7 +292,7 @@ class Database:
         self, challenge_id: int, user_id: int, executed: bool
     ):
         async with self.get_session() as session:
-            current_date = datetime.now(timezone(us_tz)).strftime("%Y-%m-%d")
+            current_date = datetime.now(us_tz).strftime("%Y-%m-%d")
             result = await session.execute(
                 select(ChallengeHistory).where(
                     ChallengeHistory.challenge_id == challenge_id,
@@ -318,7 +322,7 @@ class Database:
         self, challenge_id: int, user_id: int
     ) -> bool:
         async with self.get_session() as session:
-            current_date = datetime.now(timezone(us_tz)).strftime("%Y-%m-%d")
+            current_date = datetime.now(us_tz).strftime("%Y-%m-%d")
             result = await session.execute(
                 select(ChallengeHistory).where(
                     ChallengeHistory.challenge_id == challenge_id,
@@ -401,6 +405,160 @@ class Database:
                 select(ScheduleMessage).where(ScheduleMessage.id == msg_id)
             )
             return result.scalar_one_or_none()
+
+    async def get_user_with_longest_daily_streak(
+        self, user_id: int | None = None
+    ) -> dict:
+        async with self.get_session() as session:
+            if user_id is not None:
+                users = [await self.get_user(user_id)]
+                if users[0] is None:
+                    return {}
+            else:
+                users = await self.get_users()
+
+            max_streak_user = None
+            max_streak = 0
+
+            for user in users:
+                result = await session.execute(
+                    select(DailyHistory)
+                    .where(
+                        DailyHistory.user_id == user.user_id,
+                        DailyHistory.is_done == True,
+                    )
+                    .order_by(DailyHistory.date.asc())
+                )
+                history = result.scalars().all()
+
+                streak = 0
+                longest_streak = 0
+                last_date = None
+
+                for entry in history:
+                    current_date = datetime.strptime(entry.date, "%Y-%m-%d").date()
+                    if last_date is None:
+                        streak = 1
+                    else:
+                        diff = (current_date - last_date).days
+                        if diff == 1:
+                            streak += 1
+                        elif diff == 0:
+                            continue
+                        else:
+                            streak = 1
+                    last_date = current_date
+                    longest_streak = max(longest_streak, streak)
+
+                if longest_streak > max_streak:
+                    max_streak = longest_streak
+                    max_streak_user = user
+
+            if max_streak_user:
+                return {
+                    "user_id": max_streak_user.user_id,
+                    "first_name": max_streak_user.first_name,
+                    "username": max_streak_user.username,
+                    "max_streak": max_streak,
+                }
+            return {}
+
+    async def get_current_daily_streak(self, user_id: int) -> int:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(DailyHistory)
+                .where(DailyHistory.user_id == user_id, DailyHistory.is_done == True)
+                .order_by(DailyHistory.date.asc())
+            )
+            history = result.scalars().all()
+
+            if not history:
+                return 0
+
+            streak = 0
+            last_date = None
+
+            for entry in reversed(history):
+                current_date = datetime.strptime(entry.date, "%Y-%m-%d").date()
+                if last_date is None:
+                    if (datetime.now(us_tz).date() - current_date).days > 1:
+                        break
+                    streak = 1
+                else:
+                    diff = (last_date - current_date).days
+                    if diff == 1:
+                        streak += 1
+                    elif diff == 0:
+                        continue
+                    else:
+                        break
+                last_date = current_date
+
+            return streak
+
+    async def get_missed_daily_days(self, user_id: int) -> int:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(DailyHistory)
+                .where(DailyHistory.user_id == user_id)
+                .order_by(DailyHistory.date.asc())
+            )
+            history = result.scalars().all()
+
+            if not history:
+                return 0
+
+            dates = sorted(
+                {datetime.strptime(entry.date, "%Y-%m-%d").date() for entry in history}
+            )
+            if not dates:
+                return 0
+
+            full_range = (dates[-1] - dates[0]).days + 1
+            unique_dates = {
+                date
+                for date in dates
+                if any(
+                    h.date == date.strftime("%Y-%m-%d") and h.is_done for h in history
+                )
+            }
+
+            return full_range - len(unique_dates)
+
+    ##########                             ##########
+    ##########          TALBE UTILS        ##########
+    ##########                             ##########
+
+    async def export_user_daily_history(self, user_id: int) -> str:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(DailyHistory)
+                .where(DailyHistory.user_id == user_id)
+                .order_by(DailyHistory.date.asc())
+            )
+            history = result.scalars().all()
+
+            if not history:
+                return ""
+
+            filename = f"user_{user_id}_daily_history.csv"
+            filepath = os.path.join(gettempdir(), filename)
+
+            with open(filepath, mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(["Date", "Task Text", "Is Done"])
+
+                for entry in history:
+                    task_result = await session.execute(
+                        select(DailyTask).where(DailyTask.id == entry.task_id)
+                    )
+                    task = task_result.scalar_one_or_none()
+                    task_text = task.daily_task if task else "Unknown Task"
+                    writer.writerow(
+                        [entry.date, task_text, "Yes" if entry.is_done else "No"]
+                    )
+
+            return filepath
 
 
 db = Database()

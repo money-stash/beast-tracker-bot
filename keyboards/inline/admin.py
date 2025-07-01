@@ -104,7 +104,7 @@ async def get_mem_user_menu(user_id: int):
         [
             InlineKeyboardButton(
                 text="📊 View full history",
-                callback_data=f"user_full_histiry_{user_id}",
+                callback_data=f"user_full_history_{user_id}",
             )
         ],
         [
