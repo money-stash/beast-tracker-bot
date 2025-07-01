@@ -2,7 +2,7 @@ from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from keyboards.inline.user import get_daily_menu, get_main_menu
+from middlewares.user import get_daily_menu, get_main_menu
 
 from database.db import db
 from config import ADMIN_ID

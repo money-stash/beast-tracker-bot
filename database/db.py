@@ -16,6 +16,7 @@ from models.weekly_task import WeeklyTask
 from models.challenge import MiniChallenge
 from models.daily_history import DailyHistory
 from models.challenges_history import ChallengeHistory
+from models.schedule_msg import ScheduleMessage
 
 from config import DB_PATH, us_tz
 
@@ -234,6 +235,7 @@ class Database:
             logger.info(f"Task {task_id} deleted")
 
     async def back_daily_to_history(self):
+        print("back_daily_to_history successffully executed")
         async with self.get_session() as session:
             users = await self.get_users()
             for user in users:
@@ -328,6 +330,7 @@ class Database:
             return entry.is_executed if entry else False
 
     async def check_all_challenges_today(self):
+        print("check_all_challenges_today successffully executed")
         async with self.get_session() as session:
             users = await self.get_users()
             challenges = await self.get_all_challenges()
@@ -353,6 +356,51 @@ class Database:
                         logger.info(
                             f"Marked as not executed: user={user.user_id}, challenge={challenge.id}"
                         )
+
+    ##########                             ##########
+    ##########    ScheduleMessage CRUD     ##########
+    ##########                             ##########
+
+    async def add_schedule_message(
+        self, text: str, media_path: str, date: str, time: str, repeat: str
+    ) -> ScheduleMessage:
+        async with self.get_session() as session:
+            msg = ScheduleMessage(
+                id=randint(1, 1000000),
+                text=text,
+                media_path=media_path,
+                date=date,
+                time=time,
+                repeat=repeat,
+            )
+            session.add(msg)
+
+            await session.commit()
+            await session.refresh(msg)
+
+            logger.info(f"Scheduled message added: id={msg.id}")
+
+            return msg
+
+    async def delete_schedule_message(self, msg_id: int):
+        async with self.get_session() as session:
+            await session.execute(
+                delete(ScheduleMessage).where(ScheduleMessage.id == msg_id)
+            )
+            await session.commit()
+            logger.info(f"Scheduled message deleted: id={msg_id}")
+
+    async def get_all_schedule_messages(self) -> list[ScheduleMessage]:
+        async with self.get_session() as session:
+            result = await session.execute(select(ScheduleMessage))
+            return result.scalars().all()
+
+    async def get_schedule_message_by_id(self, msg_id: int) -> ScheduleMessage | None:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(ScheduleMessage).where(ScheduleMessage.id == msg_id)
+            )
+            return result.scalar_one_or_none()
 
 
 db = Database()

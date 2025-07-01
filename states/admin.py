@@ -25,3 +25,14 @@ class NewChallenge(StatesGroup):
     rules = State()
     action = State()
     accept = State()
+
+
+class ScheduleMessage(StatesGroup):
+    pick_format = State()
+    format_text = State()
+    media = State()
+    caption = State()
+    date = State()
+    repeat = State()
+    time = State()
+    accept = State()

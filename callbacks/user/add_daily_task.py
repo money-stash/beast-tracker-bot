@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message
 
 from database.db import db
 from states.user import AddDailyTask
-from keyboards.inline.user import get_accept_cancel_keyboard, get_back_to_daily_menu
+from middlewares.user import get_accept_cancel_keyboard, get_back_to_daily_menu
 
 router = Router()
 

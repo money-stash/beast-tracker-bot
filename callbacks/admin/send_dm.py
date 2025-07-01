@@ -29,6 +29,20 @@ async def start_send_dm_to_user(
     )
 
 
+@router.callback_query(F.data == "send_manual_msg")
+async def start_send_dm_to_userad(
+    call: CallbackQuery, bot: Bot, state: FSMContext, user_id: int
+):
+    await bot.edit_message_text(
+        chat_id=user_id,
+        message_id=call.message.message_id,
+        text="👤 Send user identifier: username, link or user_id",
+        reply_markup=await get_cancel_admin(),
+    )
+    await state.update_data({"msg_id": call.message.message_id})
+    await state.set_state(SendDmAdmin.user_identy)
+
+
 @router.callback_query(F.data == "send_dm")
 async def start_send_dm(call: CallbackQuery, bot: Bot, state: FSMContext, user_id: int):
     await bot.edit_message_text(

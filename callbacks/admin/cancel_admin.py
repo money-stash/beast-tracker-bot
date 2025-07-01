@@ -13,9 +13,10 @@ async def end_cancel_admin(
 ):
     await state.clear()
 
-    await bot.edit_message_text(
+    await bot.delete_message(user_id, call.message.message_id)
+
+    await bot.send_message(
         chat_id=user_id,
-        message_id=call.message.message_id,
         text="👩‍💼 You opened admin panel",
         reply_markup=await get_admin_menu(),
     )

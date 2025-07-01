@@ -178,7 +178,12 @@ async def get_daily_motivation_menu():
         [InlineKeyboardButton(text="🧭 Schedule", callback_data="schedule_message")],
         [
             InlineKeyboardButton(
-                text="💬 Send manual messages", callback_data="schedule_message"
+                text="🕰️ Scheduled messages", callback_data="scheduled_messages"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="💬 Send manual messages", callback_data="send_manual_msg"
             )
         ],
         [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],

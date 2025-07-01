@@ -2,7 +2,7 @@ from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 
 from database.db import db
-from keyboards.inline.user import get_daily_menu
+from middlewares.user import get_daily_menu
 
 router = Router()
 

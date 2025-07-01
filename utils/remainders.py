@@ -1,9 +1,10 @@
 from database.db import db
-from keyboards.inline.user import get_daily_ok
+from middlewares.user import get_daily_ok
 
 
 async def shchedule_daily_remainders(bot):
     all_users = await db.get_users()
+    print("shchedule_daily_remainders successffully executed")
 
     for user in all_users:
         user_unfinished_tasks = await db.daily_user_remainder(user.user_id)

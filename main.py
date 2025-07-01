@@ -1,5 +1,4 @@
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import asyncio
 from aiogram import Bot, Dispatcher
@@ -38,16 +37,21 @@ from callbacks.admin import (
     add_challenge,
     open_admin_challenge,
     delete_challenge,
+    schedule_message,
+    open_scheduled_messages,
+    schedule_msg_info,
+    delete_scheduled,
 )
 
 from middlewares.user_info import UserInfoMiddleware
 from utils.remainders import shchedule_daily_remainders
 
 from database.db import db
-from config import TOKEN, us_tz
+from config import TOKEN, us_tz, scheduler
 
 
 async def scheduled_task(bot: Bot):
+    print("scheduled_task successffully executed")
     await db.cleanup_daily_tasks()
 
 
@@ -89,9 +93,12 @@ async def main():
         user_challenges.router,
         open_user_challenge.router,
         exec_challenge.router,
+        schedule_message.router,
+        open_scheduled_messages.router,
+        schedule_msg_info.router,
+        delete_scheduled.router,
     )
 
-    scheduler = AsyncIOScheduler(timezone=us_tz)
     scheduler.add_job(
         scheduled_task, CronTrigger(hour=0, minute=0, timezone=us_tz), args=[bot]
     )
