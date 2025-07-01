@@ -1,5 +1,3 @@
-from pytz import timezone
-
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -46,7 +44,7 @@ from middlewares.user_info import UserInfoMiddleware
 from utils.remainders import shchedule_daily_remainders
 
 from database.db import db
-from config import TOKEN
+from config import TOKEN, us_tz
 
 
 async def scheduled_task(bot: Bot):
@@ -92,8 +90,6 @@ async def main():
         open_user_challenge.router,
         exec_challenge.router,
     )
-
-    us_tz = timezone("Europe/Kyiv")
 
     scheduler = AsyncIOScheduler(timezone=us_tz)
     scheduler.add_job(

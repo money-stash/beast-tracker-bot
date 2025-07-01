@@ -17,7 +17,7 @@ from models.challenge import MiniChallenge
 from models.daily_history import DailyHistory
 from models.challenges_history import ChallengeHistory
 
-from config import DB_PATH
+from config import DB_PATH, us_tz
 
 
 class Database:
@@ -177,7 +177,7 @@ class Database:
             tasks_result = await session.execute(select(DailyTask))
             tasks = tasks_result.scalars().all()
 
-            now_date = datetime.now(timezone("Europe/Kyiv")).strftime("%Y-%m-%d")
+            now_date = datetime.now(timezone(us_tz)).strftime("%Y-%m-%d")
 
             for task in tasks:
                 history = DailyHistory(
@@ -243,9 +243,7 @@ class Database:
                         history = DailyHistory(
                             user_id=user.user_id,
                             task_id=task.id,
-                            date=datetime.now(timezone("Europe/Kyiv")).strftime(
-                                "%Y-%m-%d"
-                            ),
+                            date=datetime.now(timezone(us_tz)).strftime("%Y-%m-%d"),
                             is_done=True,
                         )
                         session.add(history)
@@ -288,7 +286,7 @@ class Database:
         self, challenge_id: int, user_id: int, executed: bool
     ):
         async with self.get_session() as session:
-            current_date = datetime.now(timezone("Europe/Kyiv")).strftime("%Y-%m-%d")
+            current_date = datetime.now(timezone(us_tz)).strftime("%Y-%m-%d")
             result = await session.execute(
                 select(ChallengeHistory).where(
                     ChallengeHistory.challenge_id == challenge_id,
@@ -318,7 +316,7 @@ class Database:
         self, challenge_id: int, user_id: int
     ) -> bool:
         async with self.get_session() as session:
-            current_date = datetime.now(timezone("Europe/Kyiv")).strftime("%Y-%m-%d")
+            current_date = datetime.now(timezone(us_tz)).strftime("%Y-%m-%d")
             result = await session.execute(
                 select(ChallengeHistory).where(
                     ChallengeHistory.challenge_id == challenge_id,
@@ -344,9 +342,7 @@ class Database:
                             ChallengeHistory.challenge_id == challenge.id,
                             ChallengeHistory.user_id == user.user_id,
                             ChallengeHistory.date
-                            == datetime.now(timezone("Europe/Kyiv")).strftime(
-                                "%Y-%m-%d"
-                            ),
+                            == datetime.now(timezone(us_tz)).strftime("%Y-%m-%d"),
                         )
                     )
                     exists = result.scalar_one_or_none()
