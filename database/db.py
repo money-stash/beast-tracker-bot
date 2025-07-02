@@ -5,7 +5,7 @@ from tempfile import gettempdir
 from random import randint
 
 from pytz import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -525,8 +525,54 @@ class Database:
 
             return full_range - len(unique_dates)
 
+    async def set_user_streak(self, user_id: int, target_streak: int):
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(DailyHistory)
+                .where(DailyHistory.user_id == user_id)
+                .order_by(DailyHistory.date.asc())
+            )
+            history = result.scalars().all()
+            history_by_date = {
+                datetime.strptime(h.date, "%Y-%m-%d").date(): h for h in history
+            }
+
+            today = datetime.now(us_tz).date()
+            start_date = today - timedelta(days=target_streak - 1)
+
+            # set required dates as done
+            for i in range(target_streak):
+                date = start_date + timedelta(days=i)
+                if date in history_by_date:
+                    history_by_date[date].is_done = True
+                else:
+                    task_result = await session.execute(
+                        select(DailyTask)
+                        .where(DailyTask.user_id == user_id)
+                        .order_by(DailyTask.created_date.desc())
+                    )
+                    task = task_result.scalar_one_or_none()
+                    if task:
+                        new_entry = DailyHistory(
+                            user_id=user_id,
+                            task_id=task.id,
+                            date=date.strftime("%Y-%m-%d"),
+                            is_done=True,
+                        )
+                        session.add(new_entry)
+
+            # unset dates after the streak
+            for h in history:
+                h_date = datetime.strptime(h.date, "%Y-%m-%d").date()
+                if h_date > today:
+                    continue
+                if h_date < start_date or h_date > today:
+                    h.is_done = False
+
+            await session.commit()
+
     ##########                             ##########
-    ##########          TALBE UTILS        ##########
+    ##########          TABLE UTILS        ##########
     ##########                             ##########
 
     async def export_user_daily_history(self, user_id: int) -> str:

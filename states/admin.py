@@ -36,3 +36,7 @@ class ScheduleMessage(StatesGroup):
     repeat = State()
     time = State()
     accept = State()
+
+
+class ChangeStreak(StatesGroup):
+    new_streak = State()

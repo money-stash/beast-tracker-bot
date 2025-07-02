@@ -42,6 +42,7 @@ from callbacks.admin import (
     schedule_msg_info,
     delete_scheduled,
     user_full_history,
+    manually_adjust_streak,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -99,6 +100,7 @@ async def main():
         schedule_msg_info.router,
         delete_scheduled.router,
         user_full_history.router,
+        manually_adjust_streak.router,
     )
 
     scheduler.add_job(
