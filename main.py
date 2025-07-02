@@ -43,6 +43,7 @@ from callbacks.admin import (
     delete_scheduled,
     user_full_history,
     manually_adjust_streak,
+    open_leaderboard,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -101,6 +102,7 @@ async def main():
         delete_scheduled.router,
         user_full_history.router,
         manually_adjust_streak.router,
+        open_leaderboard.router,
     )
 
     scheduler.add_job(
@@ -129,6 +131,8 @@ async def main():
         args=[bot],
     )
     scheduler.start()
+
+    await db.update_leaderboard()
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

@@ -15,6 +15,7 @@ from utils.logger import logger
 from utils.time_utils import get_us_date
 
 from models.user import User
+from models.leaderbord import LeadBord
 from models.daily_task import DailyTask
 from models.weekly_task import WeeklyTask
 from models.challenge import MiniChallenge
@@ -406,6 +407,8 @@ class Database:
             )
             return result.scalar_one_or_none()
 
+    # STRAK
+
     async def get_user_with_longest_daily_streak(
         self, user_id: int | None = None
     ) -> dict:
@@ -571,6 +574,107 @@ class Database:
 
             await session.commit()
 
+    async def get_biggest_comeback(self) -> dict:
+        async with self.get_session() as session:
+            users = await self.get_users()
+            max_gap = 0
+            max_comeback_streak = 0
+            max_user = None
+
+            for user in users:
+                result = await session.execute(
+                    select(DailyHistory)
+                    .where(DailyHistory.user_id == user.user_id)
+                    .order_by(DailyHistory.date.asc())
+                )
+                history = result.scalars().all()
+                if not history:
+                    continue
+
+                dates_done = sorted(
+                    datetime.strptime(h.date, "%Y-%m-%d").date()
+                    for h in history
+                    if h.is_done
+                )
+                if not dates_done:
+                    continue
+
+                gaps = []
+                prev_date = dates_done[0]
+
+                for i in range(1, len(dates_done)):
+                    diff = (dates_done[i] - prev_date).days
+                    if diff > 1:
+                        gap = diff - 1
+                        gaps.append((prev_date, gap, i))
+                    prev_date = dates_done[i]
+
+                if not gaps:
+                    continue
+
+                for prev_date, gap, idx in gaps:
+                    current_streak = 1
+                    for j in range(idx + 1, len(dates_done)):
+                        if (dates_done[j] - dates_done[j - 1]).days == 1:
+                            current_streak += 1
+                        else:
+                            break
+                    if gap > max_gap or (
+                        gap == max_gap and current_streak > max_comeback_streak
+                    ):
+                        max_gap = gap
+                        max_comeback_streak = current_streak
+                        max_user = user
+
+            if max_user is None:
+                return {}
+
+            return {
+                "user_id": max_user.user_id,
+                "max_gap": max_gap,
+                "comeback_streak": max_comeback_streak,
+            }
+
+    async def get_most_consistent_this_month(self) -> dict:
+        async with self.get_session() as session:
+            users = await self.get_users()
+            if not users:
+                return {}
+
+            now = datetime.now(us_tz)
+            first_day = now.replace(day=1).date()
+            last_day = (first_day + timedelta(days=32)).replace(day=1) - timedelta(
+                days=1
+            )
+            max_done = 0
+            most_consistent_user = None
+
+            for user in users:
+                result = await session.execute(
+                    select(DailyHistory).where(
+                        DailyHistory.user_id == user.user_id,
+                        DailyHistory.is_done == True,
+                        DailyHistory.date >= first_day.strftime("%Y-%m-%d"),
+                        DailyHistory.date <= last_day.strftime("%Y-%m-%d"),
+                    )
+                )
+                done_days = result.scalars().all()
+                count_done = len(done_days)
+
+                if count_done > max_done:
+                    max_done = count_done
+                    most_consistent_user = user
+
+            if most_consistent_user is None:
+                return {}
+
+            return {
+                "user_id": most_consistent_user.user_id,
+                "first_name": most_consistent_user.first_name,
+                "username": most_consistent_user.username,
+                "done_days": max_done,
+            }
+
     ##########                             ##########
     ##########          TABLE UTILS        ##########
     ##########                             ##########
@@ -605,6 +709,61 @@ class Database:
                     )
 
             return filepath
+
+    async def update_leaderboard(self):
+        async with self.get_session() as session:
+            users = await self.get_users()
+            streaks = []
+
+            for user in users:
+                result = await session.execute(
+                    select(DailyHistory)
+                    .where(
+                        DailyHistory.user_id == user.user_id,
+                        DailyHistory.is_done == True,
+                    )
+                    .order_by(DailyHistory.date.asc())
+                )
+                history = result.scalars().all()
+
+                streak = 0
+                last_date = None
+
+                for entry in reversed(history):
+                    current_date = datetime.strptime(entry.date, "%Y-%m-%d").date()
+                    if last_date is None:
+                        if (datetime.now(us_tz).date() - current_date).days > 1:
+                            break
+                        streak = 1
+                    else:
+                        diff = (last_date - current_date).days
+                        if diff == 1:
+                            streak += 1
+                        elif diff == 0:
+                            continue
+                        else:
+                            break
+                    last_date = current_date
+
+                streaks.append((user.user_id, streak))
+
+            top_streaks = sorted(streaks, key=lambda x: x[1], reverse=True)[:5]
+
+            await session.execute(delete(LeadBord))  # удаляем все записи перед записью
+            for user_id, streak in top_streaks:
+                entry = LeadBord(user_id=user_id, streak=streak)
+                session.add(entry)
+
+            await session.commit()
+            logger.info("leaderboard updated")
+
+    async def get_leaderboard(self):
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(LeadBord).order_by(LeadBord.streak.desc())
+            )
+            entries = result.scalars().all()
+            return entries
 
 
 db = Database()
