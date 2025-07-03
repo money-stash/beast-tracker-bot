@@ -44,6 +44,7 @@ from callbacks.admin import (
     user_full_history,
     manually_adjust_streak,
     open_leaderboard,
+    current_partners,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -103,6 +104,7 @@ async def main():
         user_full_history.router,
         manually_adjust_streak.router,
         open_leaderboard.router,
+        current_partners.router,
     )
 
     scheduler.add_job(
@@ -132,6 +134,7 @@ async def main():
     )
     scheduler.start()
 
+    await db.assign_random_partners()
     await db.update_leaderboard()
 
     await bot.delete_webhook(drop_pending_updates=True)

@@ -274,3 +274,9 @@ async def get_challenges_menu(challenges):
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     return keyboard
+
+
+async def get_back_partners_mngr():
+    kb = [[InlineKeyboardButton(text="🔙 Back", callback_data=f"open_partner_manager")]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard

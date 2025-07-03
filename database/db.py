@@ -2,7 +2,7 @@ import os
 import csv
 from tempfile import gettempdir
 
-from random import randint
+from random import randint, choice
 
 from pytz import timezone
 from datetime import datetime, timedelta
@@ -138,6 +138,56 @@ class Database:
             )
             await session.commit()
             logger.info(f"User {user_id} banned={banned}")
+
+    async def assign_random_partners(self):
+        async with self.get_session() as session:
+            result = await session.execute(select(User))
+            users = result.scalars().all()
+
+            if len(users) < 2:
+                for user in users:
+                    user.partner_id = 0
+
+                await session.commit()
+
+                return
+
+            user_ids = [user.user_id for user in users]
+
+            for user in users:
+                possible_partners = [uid for uid in user_ids if uid != user.user_id]
+                if not possible_partners:
+                    user.partner_id = 0
+                else:
+                    user.partner_id = choice(possible_partners)
+
+            await session.commit()
+
+    async def get_partners_overview(self) -> str:
+        async with self.get_session() as session:
+            result = await session.execute(select(User))
+            users = result.scalars().all()
+
+            # Создаем словарь user_id -> username или first_name для удобства вывода
+            user_map = {
+                user.user_id: user.username or user.first_name or str(user.user_id)
+                for user in users
+            }
+
+            lines = []
+            for user in users:
+                partner_id = user.partner_id
+                partner_name = (
+                    user_map.get(partner_id, "None")
+                    if partner_id and partner_id != 0
+                    else "No partner"
+                )
+                user_name = user_map.get(user.user_id, str(user.user_id))
+                lines.append(
+                    f"{user_name} (ID: {user.user_id}) — Partner: {partner_name} (ID: {partner_id})"
+                )
+
+            return "\n".join(lines)
 
     ##########                          ##########
     ##########    MiniChallenge CRUD    ##########

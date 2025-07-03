@@ -16,6 +16,7 @@ async def open_profile(call: CallbackQuery, bot: Bot):
         f"👤 Profile\n\n"
         f"Name: {user_info.first_name}\n"
         f"Username: {user_info.username}\n"
+        f"Your partner: {user_info.partner_id}\n"
     )
 
     await bot.edit_message_text(
