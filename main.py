@@ -45,6 +45,7 @@ from callbacks.admin import (
     manually_adjust_streak,
     open_leaderboard,
     current_partners,
+    open_check_menagement,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -105,6 +106,7 @@ async def main():
         manually_adjust_streak.router,
         open_leaderboard.router,
         current_partners.router,
+        open_check_menagement.router,
     )
 
     scheduler.add_job(

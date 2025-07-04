@@ -8,10 +8,10 @@ async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="🎯 Challenges", callback_data="user_challenges"),
         ],
         [
-            InlineKeyboardButton(text="🔔 Remainders", callback_data="my_remainders"),
             InlineKeyboardButton(text="👤 Profile", callback_data="profile"),
         ],
     ]
+    # InlineKeyboardButton(text="🔔 Remainders", callback_data="my_remainders"),
     if is_admin:
         kb_btns.append(
             [InlineKeyboardButton(text="👩‍💼 Admin panel", callback_data="open_admin")]

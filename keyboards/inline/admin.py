@@ -280,3 +280,26 @@ async def get_back_partners_mngr():
     kb = [[InlineKeyboardButton(text="🔙 Back", callback_data=f"open_partner_manager")]]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     return keyboard
+
+
+async def check_menagement_menu():
+    kb = [
+        [
+            InlineKeyboardButton(
+                text="View all check-in activity", callback_data="mngmnt_data"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Manual check-in override", callback_data="manual_check_override"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Bulk message missed check-ins", callback_data="bulk_message"
+            )
+        ],
+        [InlineKeyboardButton(text="🔙 Admin menu", callback_data="back_to_admin")],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    return keyboard
