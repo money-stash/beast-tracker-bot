@@ -5,9 +5,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 load_dotenv()
 
-TOKEN = os.getenv("TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID"))
-DB_PATH = os.getenv("DB_PATH")
+TOKEN = "7754876747:AAHowtL14Mcu_M8mfCXix_8p9vaDWtNUS_g"
+ADMIN_ID = 7742837753
+DB_PATH = "database/database.db"
 
 us_tz = timezone("Europe/Kyiv")
 scheduler = AsyncIOScheduler(timezone=us_tz)
