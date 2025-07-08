@@ -15,7 +15,7 @@ async def start_func(msg: Message, bot: Bot, user_id: int):
 
     await db.create_user(user_id, first_name, username)
 
-    if user_id == ADMIN_ID:
+    if user_id in ADMIN_ID:
         kb = await get_main_menu(is_admin=True)
     else:
         kb = await get_main_menu()
