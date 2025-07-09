@@ -34,3 +34,10 @@ async def print_open_dashboard(call: CallbackQuery, bot: Bot, user_id: int):
             text=text,
             reply_markup=await get_back_to_admin(),
         )
+    else:
+        await bot.edit_message_text(
+            chat_id=user_id,
+            message_id=call.message.message_id,
+            text="Fristly, you need add group",
+            reply_markup=await get_back_to_admin(),
+        )

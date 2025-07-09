@@ -1,6 +1,5 @@
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
-from aiogram.fsm.context import FSMContext
 
 from middlewares.user import get_daily_menu, get_main_menu
 
@@ -14,7 +13,7 @@ router = Router()
 @router.callback_query(F.data == "back_to_main")
 async def back_to_main(call: CallbackQuery, bot: Bot, user_id: int):
 
-    if user_id == ADMIN_ID:
+    if user_id in ADMIN_ID:
         kb = await get_main_menu(is_admin=True)
     else:
         kb = await get_main_menu(is_admin=False)
