@@ -46,6 +46,7 @@ from callbacks.admin import (
     open_leaderboard,
     current_partners,
     open_check_menagement,
+    open_export,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -107,6 +108,7 @@ async def main():
         open_leaderboard.router,
         current_partners.router,
         open_check_menagement.router,
+        open_export.router,
     )
 
     scheduler.add_job(

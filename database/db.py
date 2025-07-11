@@ -815,5 +815,112 @@ class Database:
             entries = result.scalars().all()
             return entries
 
+    async def export_all_users_report(self) -> str:
+        # Собираем всех пользователей
+        users = await self.get_users()
+
+        # Создаем файл во временной папке
+        filename = "all_users_full_report.csv"
+        filepath = os.path.join(gettempdir(), filename)
+
+        with open(filepath, mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+
+            for user in users:
+                # Заголовок для каждого пользователя
+                writer.writerow([f"===== USER: {user.username} ({user.user_id}) ====="])
+                writer.writerow([])
+
+                # 1) Daily Check-ins (current tasks)
+                writer.writerow(["== CURRENT DAILY TASKS =="])
+                writer.writerow(["Date", "Task Text", "Done"])
+                current_tasks = await self.get_daily_tasks(user.user_id)
+                for task in current_tasks:
+                    writer.writerow(
+                        [
+                            task.created_date,
+                            task.daily_task,
+                            "Yes" if task.is_done else "No",
+                        ]
+                    )
+                writer.writerow([])
+
+                # 2) Daily History
+                writer.writerow(["== DAILY HISTORY =="])
+                writer.writerow(["Date", "Task ID", "Done"])
+                async with self.get_session() as session:
+                    history_result = await session.execute(
+                        select(DailyHistory)
+                        .where(DailyHistory.user_id == user.user_id)
+                        .order_by(DailyHistory.date.asc())
+                    )
+                    daily_history = history_result.scalars().all()
+                    for entry in daily_history:
+                        writer.writerow(
+                            [
+                                entry.date,
+                                entry.task_id,
+                                "Yes" if entry.is_done else "No",
+                            ]
+                        )
+                writer.writerow([])
+
+                # 3) Missed Days
+                missed = await self.get_missed_daily_days(user.user_id)
+                writer.writerow(["== MISSED DAYS =="])
+                writer.writerow(["Total Missed Days", missed])
+                writer.writerow([])
+
+                # 4) Current Streak
+                current_streak = await self.get_current_daily_streak(user.user_id)
+                writer.writerow(["== STREAK INFO =="])
+                writer.writerow(["Current Streak", current_streak])
+                writer.writerow([])
+
+                # 5) Partner Data
+                writer.writerow(["== USER DATA =="])
+                writer.writerow(["Username", user.username or "N/A"])
+                writer.writerow(["First Name", user.first_name or "N/A"])
+                writer.writerow(["Partner ID", user.partner_id or "No partner"])
+                writer.writerow(["Registration Date", user.reg_date or "N/A"])
+                writer.writerow(
+                    ["Is Banned", "Yes" if getattr(user, "is_baned", False) else "No"]
+                )
+                writer.writerow([])
+
+                # 6) Challenge Logs
+                writer.writerow(["== CHALLENGE LOGS =="])
+                writer.writerow(["Date", "Challenge ID", "Executed"])
+                async with self.get_session() as session:
+                    challenge_result = await session.execute(
+                        select(ChallengeHistory)
+                        .where(ChallengeHistory.user_id == user.user_id)
+                        .order_by(ChallengeHistory.date.asc())
+                    )
+                    challenge_history = challenge_result.scalars().all()
+                    for entry in challenge_history:
+                        writer.writerow(
+                            [
+                                entry.date,
+                                entry.challenge_id,
+                                "Yes" if entry.is_executed else "No",
+                            ]
+                        )
+                writer.writerow([])
+
+                # 7) Overall Participation
+                writer.writerow(["== OVERALL PARTICIPATION =="])
+                total_current_checkins = len([t for t in current_tasks if t.is_done])
+                total_history_checkins = len([h for h in daily_history if h.is_done])
+                total_challenges = len(challenge_history)
+                writer.writerow(["Current Tasks Done", total_current_checkins])
+                writer.writerow(["Historical Tasks Done", total_history_checkins])
+                writer.writerow(["Total Challenges Logged", total_challenges])
+                writer.writerow([])
+                writer.writerow([])
+                writer.writerow([])  # Дополнительная пустая строка между пользователями
+
+        return filepath
+
 
 db = Database()
