@@ -47,6 +47,8 @@ from callbacks.admin import (
     current_partners,
     open_check_menagement,
     open_export,
+    set_dme,
+    image_autopost,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -109,6 +111,8 @@ async def main():
         current_partners.router,
         open_check_menagement.router,
         open_export.router,
+        set_dme.router,
+        image_autopost.router,
     )
 
     scheduler.add_job(

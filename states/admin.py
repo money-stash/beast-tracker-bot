@@ -40,3 +40,13 @@ class ScheduleMessage(StatesGroup):
 
 class ChangeStreak(StatesGroup):
     new_streak = State()
+
+
+class ChangeDME(StatesGroup):
+    new_dme = State()
+    accept = State()
+
+
+class UploadImageAutopost(StatesGroup):
+    image = State()
+    accept = State()
