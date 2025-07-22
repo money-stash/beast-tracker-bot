@@ -50,3 +50,8 @@ class ChangeDME(StatesGroup):
 class UploadImageAutopost(StatesGroup):
     image = State()
     accept = State()
+
+
+class SetNewRotationDate(StatesGroup):
+    next_rotation_date = State()
+    accept = State()

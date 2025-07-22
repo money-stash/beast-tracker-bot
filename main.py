@@ -49,6 +49,8 @@ from callbacks.admin import (
     open_export,
     set_dme,
     image_autopost,
+    next_rotation_date,
+    mngmnt_data,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -113,6 +115,8 @@ async def main():
         open_export.router,
         set_dme.router,
         image_autopost.router,
+        next_rotation_date.router,
+        mngmnt_data.router,
     )
 
     scheduler.add_job(

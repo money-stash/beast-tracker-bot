@@ -47,3 +47,19 @@ def update_dme_hours(new_hours, file_path: str = "database/data.json"):
 
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
+
+
+def get_next_rotation(file_path: str = "database/data.json"):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        return data["next_rotation"]
+
+
+def update_next_rotation(new_rotation, file_path: str = "database/data.json"):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    data["next_rotation"] = new_rotation
+
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)

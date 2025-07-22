@@ -922,5 +922,44 @@ class Database:
 
         return filepath
 
+    async def export_checkin_report(self) -> str:
+        users = await self.get_users()
+        filename = "all_users_checkin_report.csv"
+        filepath = os.path.join(gettempdir(), filename)
+
+        with open(filepath, mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                ["User ID", "Username", "First Name", "Date", "Task Text", "Done"]
+            )
+
+            async with self.get_session() as session:
+                for user in users:
+                    history_result = await session.execute(
+                        select(DailyHistory)
+                        .where(DailyHistory.user_id == user.user_id)
+                        .order_by(DailyHistory.date.asc())
+                    )
+                    history = history_result.scalars().all()
+
+                    for entry in history:
+                        task_result = await session.execute(
+                            select(DailyTask).where(DailyTask.id == entry.task_id)
+                        )
+                        task = task_result.scalar_one_or_none()
+                        task_text = task.daily_task if task else "Unknown Task"
+                        writer.writerow(
+                            [
+                                user.user_id,
+                                user.username or "",
+                                user.first_name or "",
+                                entry.date,
+                                task_text,
+                                "Yes" if entry.is_done else "No",
+                            ]
+                        )
+
+        return filepath
+
 
 db = Database()
