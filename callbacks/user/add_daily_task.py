@@ -19,7 +19,7 @@ async def add_daily_task(call: CallbackQuery, bot: Bot, state: FSMContext):
 
     msg = await bot.send_message(
         chat_id=call.from_user.id,
-        text="✏️ Enter the text of the daily task",
+        text="✏️ Enter the text of the DME",
     )
 
     await state.update_data({"msg_id": msg.message_id})

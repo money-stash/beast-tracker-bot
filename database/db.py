@@ -147,19 +147,31 @@ class Database:
             if len(users) < 2:
                 for user in users:
                     user.partner_id = 0
-
                 await session.commit()
-
                 return
 
-            user_ids = [user.user_id for user in users]
-
+            # очистка старых партнеров
             for user in users:
-                possible_partners = [uid for uid in user_ids if uid != user.user_id]
-                if not possible_partners:
-                    user.partner_id = 0
-                else:
-                    user.partner_id = choice(possible_partners)
+                user.partner_id = 0
+
+            await session.commit()
+
+            from random import shuffle
+
+            user_pool = users[:]
+            shuffle(user_pool)
+
+            # если нечетное количество, один останется без партнера
+            if len(user_pool) % 2 != 0:
+                user_pool.pop().partner_id = 0
+
+            pairs = []
+            for i in range(0, len(user_pool), 2):
+                user_a = user_pool[i]
+                user_b = user_pool[i + 1]
+                user_a.partner_id = user_b.user_id
+                user_b.partner_id = user_a.user_id
+                pairs.append((user_a.user_id, user_b.user_id))
 
             await session.commit()
 

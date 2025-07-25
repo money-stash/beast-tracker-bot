@@ -32,10 +32,10 @@ async def back_to_daily(call: CallbackQuery, bot: Bot):
     user_id = call.from_user.id
     daily_user = await db.get_daily_tasks(user_id)
 
-    answ_text = "📋 You have moved to the daily tasks menu\n\n"
+    answ_text = "📋 You have moved to the DME menu\n\n"
 
     if len(daily_user) == 0:
-        answ_text += "❗️ You don't have daily tasks"
+        answ_text += "❗️ You don't have DME"
     else:
         for task in daily_user:
             if task.is_done:

@@ -53,7 +53,7 @@ async def open_remove_daily_task(call: CallbackQuery, bot: Bot, state: FSMContex
     await bot.edit_message_text(
         message_id=call.message.message_id,
         chat_id=call.from_user.id,
-        text="❗️ Select the tasks you want to mark as completed",
+        text="❗️ Select the DME you want to mark as completed",
         reply_markup=keyboard,
     )
 

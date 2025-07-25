@@ -4,7 +4,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     kb_btns = [
         [
-            InlineKeyboardButton(text="‼️ Daily", callback_data="daily_tasks"),
+            InlineKeyboardButton(text="‼️ DME", callback_data="daily_tasks"),
             InlineKeyboardButton(text="🎯 Challenges", callback_data="user_challenges"),
         ],
         [
@@ -42,7 +42,7 @@ async def get_back_to_main_menu() -> InlineKeyboardMarkup:
 
 async def get_back_to_daily_menu() -> InlineKeyboardMarkup:
     kb_btns = [
-        [InlineKeyboardButton(text="🔙 Daily", callback_data="back_to_daily")],
+        [InlineKeyboardButton(text="🔙 DME", callback_data="back_to_daily")],
     ]
 
     kb = InlineKeyboardMarkup(inline_keyboard=kb_btns, resize_keyboard=True)
@@ -52,15 +52,17 @@ async def get_back_to_daily_menu() -> InlineKeyboardMarkup:
 async def get_daily_menu() -> InlineKeyboardMarkup:
     kb_btns = [
         [
-            InlineKeyboardButton(text="➕ Add", callback_data="add_daily_task"),
-            InlineKeyboardButton(text="➖ Delete", callback_data="remove_daily_task"),
+            InlineKeyboardButton(text="➕ New DME", callback_data="add_daily_task"),
+            InlineKeyboardButton(
+                text="➖ Delete DME", callback_data="remove_daily_task"
+            ),
         ],
         [
             InlineKeyboardButton(
-                text="✅ Mark completed", callback_data="done_daily_task"
+                text="✅ Mark completed for today", callback_data="done_daily_task"
             ),
         ],
-        [InlineKeyboardButton(text="📊 Statistic", callback_data="daily_statistic")],
+        [InlineKeyboardButton(text="📊 My DME stats", callback_data="daily_statistic")],
         [InlineKeyboardButton(text="🔙 Main menu", callback_data="back_to_main")],
     ]
 
