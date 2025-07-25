@@ -21,6 +21,16 @@ async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     return kb
 
 
+async def get_profile_keyboard() -> InlineKeyboardMarkup:
+    kb_btns = [
+        [InlineKeyboardButton(text="📊 Statistic", callback_data="user_statistic")],
+        [InlineKeyboardButton(text="🔙 Main menu", callback_data="back_to_main")],
+    ]
+
+    kb = InlineKeyboardMarkup(inline_keyboard=kb_btns, resize_keyboard=True)
+    return kb
+
+
 async def get_back_to_main_menu() -> InlineKeyboardMarkup:
     kb_btns = [
         [InlineKeyboardButton(text="🔙 Main menu", callback_data="back_to_main")],

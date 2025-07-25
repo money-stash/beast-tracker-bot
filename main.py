@@ -18,6 +18,7 @@ from callbacks.user import (
     user_challenges,
     open_user_challenge,
     exec_challenge,
+    open_daily_statistic,
 )
 from callbacks.admin import (
     open_admin,
@@ -117,6 +118,7 @@ async def main():
         image_autopost.router,
         next_rotation_date.router,
         mngmnt_data.router,
+        open_daily_statistic.router,
     )
 
     scheduler.add_job(
