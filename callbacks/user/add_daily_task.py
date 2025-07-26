@@ -19,7 +19,7 @@ async def add_daily_task(call: CallbackQuery, bot: Bot, state: FSMContext):
 
     msg = await bot.send_message(
         chat_id=call.from_user.id,
-        text="✏️ Enter the text of the DME",
+        text="✏️ What is your new DME commitment?",
     )
 
     await state.update_data({"msg_id": msg.message_id})
@@ -39,7 +39,7 @@ async def process_task_text(message: Message, state: FSMContext, bot: Bot):
     await state.update_data(task_text=task_text)
 
     await bot.edit_message_text(
-        text=f"✅ You've entered the text of the assignment:\n\n<b>{task_text}</b>\n\n❓ You want to keep it?",
+        text=f"✅ Your new DME will be set to:\n\n<b>{task_text}</b>\n\n❓ Is this the DME you are committing to?",
         chat_id=message.from_user.id,
         message_id=data.get("msg_id"),
         reply_markup=await get_accept_cancel_keyboard(),
@@ -64,7 +64,7 @@ async def process_accept_cancel(call: CallbackQuery, state: FSMContext, bot: Bot
         await db.create_daily_task(user_id=user_id, task_text=task_text, date=now_date)
 
         await bot.edit_message_text(
-            text="✅ You have successfully added a task",
+            text="✅ You have successfully setup your new DME!💪",
             chat_id=call.from_user.id,
             message_id=call.message.message_id,
             reply_markup=await get_back_to_daily_menu(),

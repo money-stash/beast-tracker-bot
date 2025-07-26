@@ -59,7 +59,7 @@ async def get_daily_menu() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="✅ Mark completed for today", callback_data="done_daily_task"
+                text="✅ Mark DME Completed for Today", callback_data="done_daily_task"
             ),
         ],
         [InlineKeyboardButton(text="📊 My DME stats", callback_data="daily_statistic")],

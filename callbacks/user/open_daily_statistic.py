@@ -24,6 +24,11 @@ async def open_open_daily(call: CallbackQuery, bot: Bot, user_id: int):
     info += f"All-time streak high: <code>{max_streak['max_streak']}</code>\n"
     info += f"Total missed days: <code>{missed_days}</code>\n"
 
+    dme_info = await db.get_dme_stats(user_id)
+
+    if dme_info:
+        info += f"\n\n{dme_info}"
+
     await bot.edit_message_text(
         chat_id=call.from_user.id,
         message_id=call.message.message_id,

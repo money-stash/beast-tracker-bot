@@ -973,5 +973,125 @@ class Database:
 
         return filepath
 
+    async def get_dme_stats(self, user_id: int) -> str:
+        async with self.get_session() as session:
+            today = datetime.now(us_tz).date()
+            day_7 = today - timedelta(days=6)
+            day_30 = today - timedelta(days=29)
+            day_90 = today - timedelta(days=89)
+
+            result = await session.execute(
+                select(DailyHistory).where(DailyHistory.user_id == user_id)
+            )
+            history = result.scalars().all()
+
+            if not history:
+                return "No data available."
+
+            def calc_rate(start_date=None):
+                day_map = {}
+                for h in history:
+                    if not h.date:
+                        continue
+                    h_date = datetime.strptime(h.date, "%Y-%m-%d").date()
+                    if start_date and h_date < start_date:
+                        continue
+                    if h_date not in day_map:
+                        day_map[h_date] = h.is_done
+                    else:
+                        day_map[h_date] = day_map[h_date] or h.is_done
+                if not day_map:
+                    return "N/A"
+                done_days = sum(1 for v in day_map.values() if v)
+                total_days = len(day_map)
+                return f"{round(done_days / total_days * 100)}%"
+
+            def get_longest_streak():
+                dates = sorted(
+                    datetime.strptime(h.date, "%Y-%m-%d").date()
+                    for h in history
+                    if h.is_done
+                )
+                if not dates:
+                    return "0 Days"
+                streak = max_streak = 1
+                best_day = dates[0]
+                for i in range(1, len(dates)):
+                    if (dates[i] - dates[i - 1]).days == 1:
+                        streak += 1
+                        if streak > max_streak:
+                            max_streak = streak
+                            best_day = dates[i]
+                    else:
+                        streak = 1
+                return f"{max_streak} Days on {best_day.strftime('%B %d, %Y')}"
+
+            def get_badges():
+                days = sorted(
+                    set(
+                        datetime.strptime(h.date, "%Y-%m-%d").date()
+                        for h in history
+                        if h.is_done
+                    )
+                )
+                if not days:
+                    return []
+                badges = []
+                streak = 1
+                for i in range(1, len(days)):
+                    if (days[i] - days[i - 1]).days == 1:
+                        streak += 1
+                        if streak in [7, 30, 60, 90, 120] and streak not in badges:
+                            badges.append(streak)
+                    else:
+                        streak = 1
+                return [f"{d}-day Streak" for d in badges]
+
+            all_users = await self.get_users()
+            ranks = []
+            for user in all_users:
+                if user.user_id == user_id:
+                    continue
+                other_result = await session.execute(
+                    select(DailyHistory)
+                    .where(DailyHistory.user_id == user.user_id)
+                    .order_by(DailyHistory.date.asc())
+                )
+                other_hist = other_result.scalars().all()
+                streak = 0
+                last_date = None
+                for entry in reversed(other_hist):
+                    current = datetime.strptime(entry.date, "%Y-%m-%d").date()
+                    if last_date is None:
+                        if (today - current).days > 1:
+                            break
+                        streak = 1
+                    else:
+                        diff = (last_date - current).days
+                        if diff == 1:
+                            streak += 1
+                        elif diff == 0:
+                            continue
+                        else:
+                            break
+                    last_date = current
+                ranks.append(streak)
+
+            current_streak = await self.get_current_daily_streak(user_id)
+            unstoppable_rank = sum(s < current_streak for s in ranks) + 1
+            total_users = len(all_users)
+
+            stats = f"""DME Completion Rate:
+    Today: {calc_rate(today)}
+    Last 7 Days: {calc_rate(day_7)}
+    Last 30 Days: {calc_rate(day_30)}
+    Last 90 Days: {calc_rate(day_90)}
+    Since starting: {calc_rate(None)}
+    Longest Streak: {get_longest_streak()}
+    UNSTOPPABLE Rank: {unstoppable_rank} of {total_users}
+    Badges Earned: ({len(get_badges())}) - {', '.join(get_badges()) if get_badges() else 'None'}"""
+
+            return stats
+
 
 db = Database()

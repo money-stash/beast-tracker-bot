@@ -20,7 +20,7 @@ async def open_daily_tasks(call: CallbackQuery, bot: Bot):
             if task.is_done:
                 answ_text += f"✅ {task.daily_task}\n"
             else:
-                answ_text += f"⁉️ {task.daily_task}\n"
+                answ_text += f"{task.daily_task}\n"
 
     await bot.edit_message_text(
         chat_id=call.from_user.id,
