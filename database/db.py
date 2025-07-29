@@ -988,7 +988,27 @@ class Database:
             if not history:
                 return "No data available."
 
-            def calc_rate(start_date=None):
+            # Get user's registration/start date
+            earliest_record_date = min(
+                datetime.strptime(h.date, "%Y-%m-%d").date() for h in history if h.date
+            )
+
+            def calc_rate(start_date=None, period_name=None):
+                # For "Today", only check today's completion
+                if period_name == "Today":
+                    today_record = next(
+                        (h for h in history if h.date == today.strftime("%Y-%m-%d")),
+                        None,
+                    )
+                    if today_record:
+                        return "100%" if today_record.is_done else "0%"
+                    else:
+                        return "0%"  # No record for today means not done
+
+                # For period calculations, check if user has been active long enough
+                if start_date and earliest_record_date > start_date:
+                    return "N/A"
+
                 day_map = {}
                 for h in history:
                     if not h.date:
@@ -1000,8 +1020,10 @@ class Database:
                         day_map[h_date] = h.is_done
                     else:
                         day_map[h_date] = day_map[h_date] or h.is_done
+
                 if not day_map:
                     return "N/A"
+
                 done_days = sum(1 for v in day_map.values() if v)
                 total_days = len(day_map)
                 return f"{round(done_days / total_days * 100)}%"
@@ -1082,14 +1104,14 @@ class Database:
             total_users = len(all_users)
 
             stats = f"""DME Completion Rate:
-    Today: {calc_rate(today)}
-    Last 7 Days: {calc_rate(day_7)}
-    Last 30 Days: {calc_rate(day_30)}
-    Last 90 Days: {calc_rate(day_90)}
-    Since starting: {calc_rate(None)}
-    Longest Streak: {get_longest_streak()}
-    UNSTOPPABLE Rank: {unstoppable_rank} of {total_users}
-    Badges Earned: ({len(get_badges())}) - {', '.join(get_badges()) if get_badges() else 'None'}"""
+        Today: {calc_rate(None, "Today")}
+        Last 7 Days: {calc_rate(day_7, "7 Days")}
+        Last 30 Days: {calc_rate(day_30, "30 Days")}
+        Last 90 Days: {calc_rate(day_90, "90 Days")}
+        Since starting: {calc_rate(None)}
+        Longest Streak: {get_longest_streak()}
+        UNSTOPPABLE Rank: {unstoppable_rank} of {total_users}
+        Badges Earned: ({len(get_badges())}) - {', '.join(get_badges()) if get_badges() else 'None'}"""
 
             return stats
 
