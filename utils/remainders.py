@@ -1,6 +1,7 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
 from database.db import db
 from middlewares.user import get_daily_ok
+from config import DB_PATH, ADMIN_ID
 
 
 async def shchedule_daily_remainders(bot):
@@ -42,3 +43,17 @@ async def shchedule_daily_remainders(bot):
             )
         except Exception as e:
             print(f"Error while sending daily remainder to user {user.user_id}: {e}")
+
+
+async def schedule_daily_db_backup(bot):
+    db_file = FSInputFile(DB_PATH)
+
+    for admin in ADMIN_ID:
+        try:
+            await bot.send_document(
+                chat_id=admin,
+                document=db_file,
+                caption="Here is the database file.",
+            )
+        except Exception as e:
+            print(f"Error while sending database file to admin {admin}: {e}")

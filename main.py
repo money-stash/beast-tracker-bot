@@ -55,7 +55,7 @@ from callbacks.admin import (
 )
 
 from middlewares.user_info import UserInfoMiddleware
-from utils.remainders import shchedule_daily_remainders
+from utils.remainders import shchedule_daily_remainders, schedule_daily_db_backup
 
 from database.db import db
 from config import TOKEN, us_tz, scheduler
@@ -143,9 +143,16 @@ async def main():
     )
     scheduler.add_job(
         shchedule_daily_remainders,
-        CronTrigger(hour=19, minute=13, timezone=us_tz),
+        CronTrigger(hour=19, minute=00, timezone=us_tz),
         args=[bot],
     )
+
+    scheduler.add_job(
+        schedule_daily_db_backup,
+        CronTrigger(hour=12, minute=00, timezone=us_tz),
+        args=[bot],
+    )
+
     scheduler.start()
 
     await db.assign_random_partners()
