@@ -133,17 +133,27 @@ async def main():
     )
     scheduler.add_job(
         shchedule_daily_remainders,
-        CronTrigger(hour=12, minute=0, timezone=us_tz),
+        CronTrigger(hour=7, minute=0, timezone=us_tz),
         args=[bot],
     )
     scheduler.add_job(
         shchedule_daily_remainders,
-        CronTrigger(hour=17, minute=0, timezone=us_tz),
+        CronTrigger(hour=10, minute=30, timezone=us_tz),
         args=[bot],
     )
     scheduler.add_job(
         shchedule_daily_remainders,
-        CronTrigger(hour=19, minute=00, timezone=us_tz),
+        CronTrigger(hour=13, minute=55, timezone=us_tz),
+        args=[bot],
+    )
+    scheduler.add_job(
+        shchedule_daily_remainders,
+        CronTrigger(hour=17, minute=40, timezone=us_tz),
+        args=[bot],
+    )
+    scheduler.add_job(
+        shchedule_daily_remainders,
+        CronTrigger(hour=19, minute=25, timezone=us_tz),
         args=[bot],
     )
 
