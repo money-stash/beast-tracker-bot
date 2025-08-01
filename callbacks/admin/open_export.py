@@ -5,6 +5,8 @@ from database.db import db
 from utils.json_utils import get_group_id
 from keyboards.inline.admin import get_group_settings_menu
 
+from config import DB_PATH
+
 router = Router()
 
 
@@ -16,3 +18,14 @@ async def open_open_export(call: CallbackQuery, bot: Bot, user_id: int):
 
     file = FSInputFile(file_path)
     await bot.send_document(chat_id=user_id, document=file)
+
+    db_file = FSInputFile(DB_PATH)
+
+    try:
+        await bot.send_document(
+            chat_id=user_id,
+            document=db_file,
+            caption="Here is the database file.",
+        )
+    except Exception as e:
+        print(f"Error while sending database file to admin {user_id}: {e}")
