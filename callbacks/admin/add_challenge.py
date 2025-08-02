@@ -1,6 +1,3 @@
-from pytz import timezone
-from datetime import datetime
-
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (

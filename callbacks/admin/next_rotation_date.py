@@ -5,7 +5,6 @@ from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from database.db import db
 from states.admin import SetNewRotationDate
 from keyboards.inline.admin import get_back_to_admin, get_cancel_admin
 from utils.json_utils import get_next_rotation, update_next_rotation

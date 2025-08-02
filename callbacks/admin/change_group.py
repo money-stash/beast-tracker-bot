@@ -1,11 +1,7 @@
-from pytz import timezone
-from datetime import datetime
-
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from database.db import db
 from states.admin import ChangeGroup
 from keyboards.inline.admin import get_back_to_admin, get_cancel_admin
 from utils.json_utils import get_group_id, update_group_id

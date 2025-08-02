@@ -1,6 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
 from database.db import db
-from middlewares.user import get_daily_ok
 from config import DB_PATH, ADMIN_ID
 
 

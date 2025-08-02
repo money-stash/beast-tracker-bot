@@ -1,7 +1,6 @@
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 
-from database.db import db
 from utils.json_utils import get_group_id
 from keyboards.inline.admin import get_group_settings_menu
 

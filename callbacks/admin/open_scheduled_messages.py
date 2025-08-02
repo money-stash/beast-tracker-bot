@@ -5,7 +5,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime
 
 from database.db import db
-from keyboards.inline.admin import get_challenges_menu
 
 router = Router()
 

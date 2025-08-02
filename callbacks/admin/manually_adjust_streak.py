@@ -1,19 +1,10 @@
-from pathlib import Path
-
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
     Message,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    FSInputFile,
 )
-from datetime import datetime
-from apscheduler.triggers.cron import CronTrigger
-
 from database.db import db
-from utils.sched_msgs import send_schedul_msg
 from states.admin import ChangeStreak
 from keyboards.inline.admin import get_back_to_admin, get_cancel_admin
 

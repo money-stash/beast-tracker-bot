@@ -2,8 +2,6 @@ from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-
-from database.db import db
 from keyboards.inline.admin import get_admin_menu
 
 router = Router()
