@@ -4,7 +4,6 @@
   "dme_hours": "00:06-23:00",
   "next_rotation": "15.12.2025",
   "permissions": [
-    {"12345678":"admin"},
-    {"87654321":"scheduler"}
+    {"12345678":"admin"}
   ]
 }

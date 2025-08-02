@@ -76,9 +76,8 @@ def get_permission(user_id: str, file_path: str = "database/data.json"):
     with open(file_path, "r") as f:
         data = json.load(f)
         for entry in data.get("permissions", []):
-            if user_id in entry:
-                return entry[user_id]
-
+            if str(user_id) in entry:
+                return entry[str(user_id)]
     return False
 
 
@@ -88,10 +87,10 @@ def add_permission(user_id: str, role: str, file_path: str = "database/data.json
         permissions = data.get("permissions", [])
 
         for entry in permissions:
-            if user_id in entry:
+            if str(user_id) in entry:
                 raise ValueError("User already exists")
 
-        permissions.append({user_id: role})
+        permissions.append({str(user_id): role})
         data["permissions"] = permissions
 
     with open(file_path, "w") as f:
@@ -106,8 +105,8 @@ def update_permission(
         permissions = data.get("permissions", [])
 
         for entry in permissions:
-            if user_id in entry:
-                entry[user_id] = new_role
+            if str(user_id) in entry:
+                entry[str(user_id)] = new_role
                 break
         else:
             raise ValueError("User not found")
@@ -122,7 +121,7 @@ def remove_permission(user_id: str, file_path: str = "database/data.json"):
     with open(file_path, "r") as f:
         data = json.load(f)
         permissions = data.get("permissions", [])
-        permissions = [entry for entry in permissions if user_id not in entry]
+        permissions = [entry for entry in permissions if str(user_id) not in entry]
         data["permissions"] = permissions
 
     with open(file_path, "w") as f:

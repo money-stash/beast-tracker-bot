@@ -64,7 +64,7 @@ async def print_user_perm(
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
 
     await bot.edit_message_text(
-        text=f"👤 {user_info.first_name} has {current_permission if current_permission else 'no'} role",
+        text=f"👤 {user_info.first_name} has <b>{current_permission if current_permission else 'no'} role </b>",
         chat_id=user_id,
         message_id=call.message.message_id,
         reply_markup=keyboard,

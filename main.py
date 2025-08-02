@@ -54,6 +54,7 @@ from callbacks.admin import (
     mngmnt_data,
     open_admin_permission,
     open_perm,
+    set_perm,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -123,6 +124,7 @@ async def main():
         open_daily_statistic.router,
         open_admin_permission.router,
         open_perm.router,
+        set_perm.router,
     )
 
     scheduler.add_job(
