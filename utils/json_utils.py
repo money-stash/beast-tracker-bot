@@ -63,3 +63,67 @@ def update_next_rotation(new_rotation, file_path: str = "database/data.json"):
 
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
+
+
+def get_all_permissions(file_path: str = "database/data.json") -> list:
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    return data.get("permissions", [])
+
+
+def get_permission(user_id: str, file_path: str = "database/data.json"):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        for entry in data.get("permissions", []):
+            if user_id in entry:
+                return entry[user_id]
+
+    return False
+
+
+def add_permission(user_id: str, role: str, file_path: str = "database/data.json"):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        permissions = data.get("permissions", [])
+
+        for entry in permissions:
+            if user_id in entry:
+                raise ValueError("User already exists")
+
+        permissions.append({user_id: role})
+        data["permissions"] = permissions
+
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def update_permission(
+    user_id: str, new_role: str, file_path: str = "database/data.json"
+):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        permissions = data.get("permissions", [])
+
+        for entry in permissions:
+            if user_id in entry:
+                entry[user_id] = new_role
+                break
+        else:
+            raise ValueError("User not found")
+
+        data["permissions"] = permissions
+
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def remove_permission(user_id: str, file_path: str = "database/data.json"):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        permissions = data.get("permissions", [])
+        permissions = [entry for entry in permissions if user_id not in entry]
+        data["permissions"] = permissions
+
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)

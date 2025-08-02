@@ -52,6 +52,8 @@ from callbacks.admin import (
     image_autopost,
     next_rotation_date,
     mngmnt_data,
+    open_admin_permission,
+    open_perm,
 )
 
 from middlewares.user_info import UserInfoMiddleware
@@ -119,17 +121,19 @@ async def main():
         next_rotation_date.router,
         mngmnt_data.router,
         open_daily_statistic.router,
+        open_admin_permission.router,
+        open_perm.router,
     )
 
     scheduler.add_job(
-        scheduled_task, CronTrigger(hour=0, minute=0, timezone=us_tz), args=[bot]
+        scheduled_task, CronTrigger(hour=2, minute=0, timezone=us_tz), args=[bot]
     )
     scheduler.add_job(
-        db.back_daily_to_history, CronTrigger(hour=23, minute=59, timezone=us_tz)
+        db.back_daily_to_history, CronTrigger(hour=2, minute=0, timezone=us_tz)
     )
     await db.back_daily_to_history()
     scheduler.add_job(
-        db.check_all_challenges_today, CronTrigger(hour=23, minute=59, timezone=us_tz)
+        db.check_all_challenges_today, CronTrigger(hour=2, minute=0, timezone=us_tz)
     )
     scheduler.add_job(
         shchedule_daily_remainders,

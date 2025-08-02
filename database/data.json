@@ -1,6 +1,10 @@
 {
-  "group_id": "-1002405948916",
+  "group_id": "-4984345916",
   "partner_rot_freq": "14",
   "dme_hours": "00:06-23:00",
-  "next_rotation": "15.12.2025"
+  "next_rotation": "15.12.2025",
+  "permissions": [
+    {"12345678":"admin"},
+    {"87654321":"scheduler"}
+  ]
 }
