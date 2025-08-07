@@ -12,4 +12,3 @@ DATA_JSON = "database/data.json"
 
 us_tz = timezone("US/Eastern")
 scheduler = AsyncIOScheduler(timezone=us_tz)
-ping = "ping"

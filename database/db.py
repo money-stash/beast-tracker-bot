@@ -347,6 +347,19 @@ class Database:
 
             return completed_users
 
+    async def count_users_not_completed_all_tasks_today(self) -> int:
+        async with self.get_session() as session:
+            users = await self.get_users()
+            incomplete_count = 0
+            for user in users:
+                result = await session.execute(
+                    select(DailyTask).where(DailyTask.user_id == user.user_id)
+                )
+                tasks = result.scalars().all()
+                if tasks and not all(task.is_done for task in tasks):
+                    incomplete_count += 1
+            return incomplete_count
+
     ##########                                  ##########
     ##########    ChallengeHistory methods       ##########
     ##########                                  ##########

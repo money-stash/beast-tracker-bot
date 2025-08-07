@@ -19,6 +19,7 @@ from callbacks.user import (
     open_user_challenge,
     exec_challenge,
     open_daily_statistic,
+    notify_group_done,
 )
 from callbacks.admin import (
     open_admin,
@@ -125,6 +126,7 @@ async def main():
         open_admin_permission.router,
         open_perm.router,
         set_perm.router,
+        notify_group_done.router,
     )
 
     scheduler.add_job(
