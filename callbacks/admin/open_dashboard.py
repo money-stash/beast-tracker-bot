@@ -14,7 +14,7 @@ async def print_open_dashboard(call: CallbackQuery, bot: Bot, user_id: int):
 
     if group_id != "none":
         chat = await bot.get_chat(group_id)
-        members_count = await bot.get_chat_member_count(group_id) - 1
+        members_count = len(await db.get_users())
 
         max_streak = await db.get_user_with_longest_daily_streak()
 
