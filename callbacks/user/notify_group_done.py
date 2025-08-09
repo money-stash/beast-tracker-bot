@@ -6,11 +6,49 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
+import os
+import json
+from datetime import date
+
 from database.db import db
 from utils.logger import logger
 from utils.json_utils import get_group_id
 
 router = Router()
+
+NOTIFY_LOG_PATH = "database/notify_log.json"
+
+
+def _load_notify_log():
+    if not os.path.exists(NOTIFY_LOG_PATH):
+        return {}
+    try:
+        with open(NOTIFY_LOG_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                return data
+            return {}
+    except Exception:
+        return {}
+
+
+def _save_notify_log(data: dict) -> None:
+    os.makedirs(os.path.dirname(NOTIFY_LOG_PATH), exist_ok=True)
+    with open(NOTIFY_LOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _has_notified_today(user_id: int) -> bool:
+    data = _load_notify_log()
+    today = date.today().isoformat()
+    last = data.get(str(user_id))
+    return last == today
+
+
+def _mark_notified_today(user_id: int) -> None:
+    data = _load_notify_log()
+    data[str(user_id)] = date.today().isoformat()
+    _save_notify_log(data)
 
 
 @router.callback_query(F.data == "notify_group_dme_done")
@@ -18,6 +56,19 @@ async def notify_group_dme_done(
     call: CallbackQuery, bot: Bot, state: FSMContext, user_id: int
 ):
     user_id = call.from_user.id
+    # if _has_notified_today(user_id):
+    #     try:
+    #         await call.answer(
+    #             "You have already notified the group today.", show_alert=True
+    #         )
+    #         await bot.edit_message_text(
+    #             chat_id=user_id,
+    #             message_id=call.message.message_id,
+    #             text="You have already sent today's DME notification.",
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"Failed to inform about duplicate notify: {e}")
+    #     return
     crnt_strak = await db.get_current_daily_streak(user_id)
     print(f"Current Streak: {crnt_strak}")
 
@@ -59,6 +110,16 @@ async def notify_group_dme_done(
     )
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
 
+    # Check if user has already notified today
+    if _has_notified_today(user_id):
+        await bot.edit_message_text(
+            chat_id=user_id,
+            message_id=call.message.message_id,
+            text="You have already sent today's DME notification.",
+            reply_markup=keyboard,
+        )
+        return
+
     user_info = await db.get_user(user_id)
     users_uncompleted = await db.count_users_not_completed_all_tasks_today()
 
@@ -75,6 +136,7 @@ async def notify_group_dme_done(
             chat_id=group_id,
             text=f"{user_info.first_name} has completed his DME!✅ - {users_uncompleted} UNSTOPPABLES remaining for 100%",
         )
+        _mark_notified_today(user_id)
         await call.answer("Group notified successfully!", show_alert=True)
         await bot.edit_message_text(
             chat_id=user_id,
@@ -84,6 +146,3 @@ async def notify_group_dme_done(
         )
     except Exception as e:
         logger.error(f"Failed to notify group: {e}")
-        # await call.answer(
-        #     "Failed to notify group. Please try again later.", show_alert=True
-        # )

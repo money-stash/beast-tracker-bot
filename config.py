@@ -1,4 +1,3 @@
-import os
 from pytz import timezone
 from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
