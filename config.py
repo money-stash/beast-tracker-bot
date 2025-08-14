@@ -4,7 +4,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 load_dotenv()
 
-TOKEN = "7754876747:AAFcB_ToTyvi-xg85rOJ9GJH5ZPxo_sYEvQ"
+TOKEN = "8320007828:AAEP5V4hmMOXqLSY5mijPqqa0M5M5pQ-aU0"
 ADMIN_ID = [7742837753, 618500315]
 DB_PATH = "database/database.db"
 DATA_JSON = "database/data.json"
