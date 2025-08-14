@@ -13,40 +13,42 @@ router = Router()
 async def print_leader_bodr(
     call: CallbackQuery, bot: Bot, state: FSMContext, user_id: int
 ):
-    leaderboard = await db.get_leaderboard()
-    max_broke_streak = await db.get_biggest_comeback()
-    max_consistent_this_month = await db.get_most_consistent_this_month()
+    # leaderboard = await db.get_leaderboard()
+    # max_broke_streak = await db.get_biggest_comeback()
+    # max_consistent_this_month = await db.get_most_consistent_this_month()
 
-    msg_text = "🥇 <b>LEADER bord</b>\n\n"
+    # msg_text = "🥇 <b>LEADER bord</b>\n\n"
 
-    msg_text += "<b>top streaks:</b>\n"
-    if leaderboard:
-        for i, entry in enumerate(leaderboard, 1):
-            user_info = await db.get_user(entry.user_id)
-            msg_text += f"{i}. {user_info.first_name}({entry.user_id}), streak: {entry.streak}\n"
-    else:
-        msg_text += "no data\n"
+    # msg_text += "<b>top streaks:</b>\n"
+    # if leaderboard:
+    #     for i, entry in enumerate(leaderboard, 1):
+    #         user_info = await db.get_user(entry.user_id)
+    #         msg_text += f"{i}. {user_info.first_name}({entry.user_id}), streak: {entry.streak}\n"
+    # else:
+    #     msg_text += "no data\n"
 
-    msg_text += "\n<b>biggest comeback:</b>\n"
-    if max_broke_streak:
-        msg_text += (
-            f"user_id: {max_broke_streak['user_id']}, "
-            f"gap: {max_broke_streak['max_gap']} days, "
-            f"comeback streak: {max_broke_streak['comeback_streak']}\n"
-        )
-    else:
-        msg_text += "no data\n"
+    # msg_text += "\n<b>biggest comeback:</b>\n"
+    # if max_broke_streak:
+    #     msg_text += (
+    #         f"user_id: {max_broke_streak['user_id']}, "
+    #         f"gap: {max_broke_streak['max_gap']} days, "
+    #         f"comeback streak: {max_broke_streak['comeback_streak']}\n"
+    #     )
+    # else:
+    #     msg_text += "no data\n"
 
-    msg_text += "\n<b>most consistent this month:</b>\n"
-    if max_consistent_this_month:
-        msg_text += (
-            f"user_id: {max_consistent_this_month['user_id']}, "
-            f"first_name: {max_consistent_this_month['first_name']}, "
-            f"username: @{max_consistent_this_month['username']}, "
-            f"done days: {max_consistent_this_month['done_days']}\n"
-        )
-    else:
-        msg_text += "no data\n"
+    # msg_text += "\n<b>most consistent this month:</b>\n"
+    # if max_consistent_this_month:
+    #     msg_text += (
+    #         f"user_id: {max_consistent_this_month['user_id']}, "
+    #         f"first_name: {max_consistent_this_month['first_name']}, "
+    #         f"username: @{max_consistent_this_month['username']}, "
+    #         f"done days: {max_consistent_this_month['done_days']}\n"
+    #     )
+    # else:
+    #     msg_text += "no data\n"
+
+    msg_text = await db.get_leaderboard_text()
 
     await call.message.edit_text(
         msg_text, parse_mode="html", reply_markup=await get_back_to_admin()
@@ -54,41 +56,42 @@ async def print_leader_bodr(
     await call.answer()
 
 
-@router.message(F.text == "/leaders")
+@router.message(F.text == "/leaderboard")
 async def send_leaderboard(message: Message, bot: Bot, state: FSMContext):
-    leaderboard = await db.get_leaderboard()
-    max_broke_streak = await db.get_biggest_comeback()
-    max_consistent_this_month = await db.get_most_consistent_this_month()
+    # leaderboard = await db.get_leaderboard()
+    # max_broke_streak = await db.get_biggest_comeback()
+    # max_consistent_this_month = await db.get_most_consistent_this_month()
 
-    msg_text = "🥇 <b>LEADER bord</b>\n\n"
+    # msg_text = "🥇 <b>LEADER bord</b>\n\n"
 
-    msg_text += "<b>top streaks:</b>\n"
-    if leaderboard:
-        for i, entry in enumerate(leaderboard, 1):
-            user_info = await db.get_user(entry.user_id)
-            msg_text += f"{i}. {user_info.first_name}({entry.user_id}), streak: {entry.streak}\n"
-    else:
-        msg_text += "no data\n"
+    # msg_text += "<b>top streaks:</b>\n"
+    # if leaderboard:
+    #     for i, entry in enumerate(leaderboard, 1):
+    #         user_info = await db.get_user(entry.user_id)
+    #         msg_text += f"{i}. {user_info.first_name}({entry.user_id}), streak: {entry.streak}\n"
+    # else:
+    #     msg_text += "no data\n"
 
-    msg_text += "\n<b>biggest comeback:</b>\n"
-    if max_broke_streak:
-        msg_text += (
-            f"user_id: {max_broke_streak['user_id']}, "
-            f"gap: {max_broke_streak['max_gap']} days, "
-            f"comeback streak: {max_broke_streak['comeback_streak']}\n"
-        )
-    else:
-        msg_text += "no data\n"
+    # msg_text += "\n<b>biggest comeback:</b>\n"
+    # if max_broke_streak:
+    #     msg_text += (
+    #         f"user_id: {max_broke_streak['user_id']}, "
+    #         f"gap: {max_broke_streak['max_gap']} days, "
+    #         f"comeback streak: {max_broke_streak['comeback_streak']}\n"
+    #     )
+    # else:
+    #     msg_text += "no data\n"
 
-    msg_text += "\n<b>most consistent this month:</b>\n"
-    if max_consistent_this_month:
-        msg_text += (
-            f"user_id: {max_consistent_this_month['user_id']}, "
-            f"first_name: {max_consistent_this_month['first_name']}, "
-            f"username: @{max_consistent_this_month['username']}, "
-            f"done days: {max_consistent_this_month['done_days']}\n"
-        )
-    else:
-        msg_text += "no data\n"
+    # msg_text += "\n<b>most consistent this month:</b>\n"
+    # if max_consistent_this_month:
+    #     msg_text += (
+    #         f"user_id: {max_consistent_this_month['user_id']}, "
+    #         f"first_name: {max_consistent_this_month['first_name']}, "
+    #         f"username: @{max_consistent_this_month['username']}, "
+    #         f"done days: {max_consistent_this_month['done_days']}\n"
+    #     )
+    # else:
+    #     msg_text += "no data\n"
 
+    msg_text = await db.get_leaderboard_text()
     await message.answer(msg_text, parse_mode="html")

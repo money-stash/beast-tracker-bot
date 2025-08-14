@@ -989,144 +989,227 @@ class Database:
     async def get_dme_stats(self, user_id: int) -> str:
         async with self.get_session() as session:
             today = datetime.now(us_tz).date()
-            day_7 = today - timedelta(days=6)
-            day_30 = today - timedelta(days=29)
-            day_90 = today - timedelta(days=89)
+            day_7_start = today - timedelta(days=6)
+            day_30_start = today - timedelta(days=29)
+            day_90_start = today - timedelta(days=89)
 
-            result = await session.execute(
-                select(DailyHistory).where(DailyHistory.user_id == user_id)
+            rows = await session.execute(
+                select(DailyHistory.user_id, DailyHistory.date, DailyHistory.is_done)
             )
-            history = result.scalars().all()
+            rows = rows.all()
 
-            if not history:
+            def parse_date(s):
+                try:
+                    return datetime.strptime(s, "%Y-%m-%d").date()
+                except Exception:
+                    return None
+
+            done_by_user: dict[int, set] = {}
+            dates_by_user: dict[int, set] = {}
+            for uid, dstr, is_done in rows:
+                d = parse_date(dstr) if dstr else None
+                if not d:
+                    continue
+                dates_by_user.setdefault(uid, set()).add(d)
+                if is_done:
+                    done_by_user.setdefault(uid, set()).add(d)
+
+            user_dates = dates_by_user.get(user_id, set())
+            user_done = done_by_user.get(user_id, set())
+
+            if not user_dates:
                 return "No data available."
 
-            # Get user's registration/start date
-            earliest_record_date = min(
-                datetime.strptime(h.date, "%Y-%m-%d").date() for h in history if h.date
-            )
+            earliest_date = min(user_dates)
 
-            def calc_rate(start_date=None, period_name=None):
-                # For "Today", only check today's completion
-                if period_name == "Today":
-                    today_record = next(
-                        (h for h in history if h.date == today.strftime("%Y-%m-%d")),
-                        None,
-                    )
-                    if today_record:
-                        return "100%" if today_record.is_done else "0%"
-                    else:
-                        return "0%"  # No record for today means not done
-
-                # For period calculations, check if user has been active long enough
-                if start_date and earliest_record_date > start_date:
-                    return "N/A"
-
-                day_map = {}
-                for h in history:
-                    if not h.date:
-                        continue
-                    h_date = datetime.strptime(h.date, "%Y-%m-%d").date()
-                    if start_date and h_date < start_date:
-                        continue
-                    if h_date not in day_map:
-                        day_map[h_date] = h.is_done
-                    else:
-                        day_map[h_date] = day_map[h_date] or h.is_done
-
-                if not day_map:
-                    return "N/A"
-
-                done_days = sum(1 for v in day_map.values() if v)
-                total_days = len(day_map)
+            def pct_for_period(start_date, end_date) -> str:
+                eff_start = max(start_date, earliest_date)
+                if eff_start > end_date:
+                    return "0%"
+                total_days = (end_date - eff_start).days + 1
+                done_days = sum(
+                    1
+                    for i in range(total_days)
+                    if (eff_start + timedelta(days=i)) in user_done
+                )
                 return f"{round(done_days / total_days * 100)}%"
 
-            def get_longest_streak():
-                dates = sorted(
-                    datetime.strptime(h.date, "%Y-%m-%d").date()
-                    for h in history
-                    if h.is_done
-                )
-                if not dates:
+            def today_pct() -> str:
+                return "100%" if today in user_done else "0%"
+
+            def longest_streak_str() -> str:
+                if not user_done:
                     return "0 Days"
-                streak = max_streak = 1
-                best_day = dates[0]
+                dates = sorted(user_done)
+                max_len = 1
+                cur_len = 1
+                best_end = dates[0]
                 for i in range(1, len(dates)):
                     if (dates[i] - dates[i - 1]).days == 1:
-                        streak += 1
-                        if streak > max_streak:
-                            max_streak = streak
-                            best_day = dates[i]
+                        cur_len += 1
                     else:
-                        streak = 1
-                return f"{max_streak} Days on {best_day.strftime('%B %d, %Y')}"
+                        if cur_len > max_len:
+                            max_len = cur_len
+                            best_end = dates[i - 1]
+                        cur_len = 1
+                if cur_len > max_len:
+                    max_len = cur_len
+                    best_end = dates[-1]
+                return f"{max_len} Days on {best_end.strftime('%B %d, %Y')}"
 
-            def get_badges():
-                days = sorted(
-                    set(
-                        datetime.strptime(h.date, "%Y-%m-%d").date()
-                        for h in history
-                        if h.is_done
-                    )
-                )
-                if not days:
-                    return []
-                badges = []
+            def current_streak_for_done(done_set: set) -> int:
+                if not done_set:
+                    return 0
+                last_done = max(done_set)
+                if (today - last_done).days not in (0, 1):
+                    return 0
                 streak = 1
-                for i in range(1, len(days)):
-                    if (days[i] - days[i - 1]).days == 1:
+                d = last_done
+                while True:
+                    prev = d - timedelta(days=1)
+                    if prev in done_set:
                         streak += 1
-                        if streak in [7, 30, 60, 90, 120] and streak not in badges:
-                            badges.append(streak)
+                        d = prev
                     else:
-                        streak = 1
-                return [f"{d}-day Streak" for d in badges]
+                        break
+                return streak
+
+            badges = []
+            max_streak = 0
+            if user_done:
+                dates = sorted(user_done)
+                cur = 1
+                max_streak = 1
+                for i in range(1, len(dates)):
+                    if (dates[i] - dates[i - 1]).days == 1:
+                        cur += 1
+                        if cur > max_streak:
+                            max_streak = cur
+                    else:
+                        cur = 1
+            for t in [7, 30, 60, 90, 120]:
+                if max_streak >= t:
+                    badges.append(f"{t}-day Streak")
 
             all_users = await self.get_users()
-            ranks = []
-            for user in all_users:
-                if user.user_id == user_id:
-                    continue
-                other_result = await session.execute(
-                    select(DailyHistory)
-                    .where(DailyHistory.user_id == user.user_id)
-                    .order_by(DailyHistory.date.asc())
-                )
-                other_hist = other_result.scalars().all()
-                streak = 0
-                last_date = None
-                for entry in reversed(other_hist):
-                    current = datetime.strptime(entry.date, "%Y-%m-%d").date()
-                    if last_date is None:
-                        if (today - current).days > 1:
-                            break
-                        streak = 1
-                    else:
-                        diff = (last_date - current).days
-                        if diff == 1:
-                            streak += 1
-                        elif diff == 0:
-                            continue
-                        else:
-                            break
-                    last_date = current
-                ranks.append(streak)
+            other_user_ids = [u.user_id for u in all_users if u.user_id != user_id]
+            other_streaks = []
+            for uid in other_user_ids:
+                other_done = done_by_user.get(uid, set())
+                other_streaks.append(current_streak_for_done(other_done))
 
-            current_streak = await self.get_current_daily_streak(user_id)
-            unstoppable_rank = sum(s < current_streak for s in ranks) + 1
+            current_streak = current_streak_for_done(user_done)
+            unstoppable_rank = 1 + sum(s > current_streak for s in other_streaks)
             total_users = len(all_users)
 
             stats = f"""DME Completion Rate:
-        Today: {calc_rate(None, "Today")}
-        Last 7 Days: {calc_rate(day_7, "7 Days")}
-        Last 30 Days: {calc_rate(day_30, "30 Days")}
-        Last 90 Days: {calc_rate(day_90, "90 Days")}
-        Since starting: {calc_rate(None)}
-        Longest Streak: {get_longest_streak()}
-        UNSTOPPABLE Rank: {unstoppable_rank} of {total_users}
-        Badges Earned: ({len(get_badges())}) - {', '.join(get_badges()) if get_badges() else 'None'}"""
-
+            Today: {today_pct()}
+            Last 7 Days: {pct_for_period(day_7_start, today)}
+            Last 30 Days: {pct_for_period(day_30_start, today)}
+            Last 90 Days: {pct_for_period(day_90_start, today)}
+            Since starting: {pct_for_period(earliest_date, today)}
+            Longest Streak: {longest_streak_str()}
+            UNSTOPPABLE Rank: {unstoppable_rank} of {total_users}
+            Badges Earned: ({len(badges)}) - {', '.join(badges) if badges else 'None'}"""
             return stats
+
+    async def get_leaderboard_text(self) -> str:
+        async with self.get_session() as session:
+            today = datetime.now(us_tz).date()
+            month_start = today.replace(day=1)
+
+            rows = await session.execute(
+                select(DailyHistory.user_id, DailyHistory.date, DailyHistory.is_done)
+            )
+            rows = rows.all()
+
+            def parse_date(s):
+                try:
+                    return datetime.strptime(s, "%Y-%m-%d").date()
+                except Exception:
+                    return None
+
+            done_by_user: dict[int, set] = {}
+            for uid, dstr, is_done in rows:
+                d = parse_date(dstr) if dstr else None
+                if not d or not is_done:
+                    continue
+                done_by_user.setdefault(uid, set()).add(d)
+
+            def current_streak(dates: set) -> int:
+                if not dates:
+                    return 0
+                last_done = max(dates)
+                if (today - last_done).days not in (0, 1):
+                    return 0
+                streak = 1
+                d = last_done
+                while True:
+                    prev = d - timedelta(days=1)
+                    if prev in dates:
+                        streak += 1
+                        d = prev
+                    else:
+                        break
+                return streak
+
+            top_streaks = []
+            for uid, dates in done_by_user.items():
+                top_streaks.append((uid, current_streak(dates)))
+            top_streaks.sort(key=lambda x: x[1], reverse=True)
+
+            biggest_gap_user = None
+            biggest_gap = -1
+            comeback_streak = 0
+            for uid, dates in done_by_user.items():
+                if not dates:
+                    continue
+                sorted_dates = sorted(dates)
+                gaps = [
+                    (sorted_dates[i] - sorted_dates[i - 1]).days
+                    for i in range(1, len(sorted_dates))
+                ]
+                if not gaps:
+                    continue
+                max_gap = max(gaps)
+                if max_gap > biggest_gap:
+                    biggest_gap = max_gap
+                    idx = gaps.index(max_gap)
+                    after_gap_dates = [d for d in sorted_dates if d > sorted_dates[idx]]
+                    cs = current_streak(set(after_gap_dates))
+                    biggest_gap_user = uid
+                    comeback_streak = cs
+
+            most_consistent_user = None
+            most_consistent_count = -1
+            for uid, dates in done_by_user.items():
+                count = sum(1 for d in dates if d >= month_start)
+                if count > most_consistent_count:
+                    most_consistent_count = count
+                    most_consistent_user = uid
+
+            users_map = {u.user_id: u for u in await self.get_users()}
+
+            text = "🥇 LEADER bord\n\n"
+            text += "top streaks:\n"
+            for idx, (uid, streak) in enumerate(top_streaks[:5], start=1):
+                user = users_map.get(uid)
+                if user:
+                    text += f"{idx}. {user.first_name}({uid}), streak: {streak}\n"
+                else:
+                    text += f"{idx}. user_id: {uid}, streak: {streak}\n"
+
+            if biggest_gap_user:
+                text += f"\nbiggest comeback:\nuser_id: {biggest_gap_user}, gap: {biggest_gap} days, comeback streak: {comeback_streak}\n"
+
+            if most_consistent_user:
+                u = users_map.get(most_consistent_user)
+                if u:
+                    text += f"\nmost consistent this month:\nuser_id: {u.user_id}, first_name: {u.first_name}, username: @{u.username if u.username else 'None'}, done days: {most_consistent_count}\n"
+                else:
+                    text += f"\nmost consistent this month:\nuser_id: {most_consistent_user}, done days: {most_consistent_count}\n"
+
+            return text
 
 
 db = Database()
