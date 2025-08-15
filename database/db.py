@@ -986,6 +986,14 @@ class Database:
 
         return filepath
 
+    def swap_day_month(date_str: str) -> str:
+        try:
+            date_part, time_part = date_str.split(" ")
+            day, month, year = date_part.split("-")
+            return f"{month}-{day}-{year} {time_part}"
+        except Exception:
+            return date_str
+
     async def get_dme_stats(self, user_id: int) -> str:
         async with self.get_session() as session:
             today = datetime.now(us_tz).date()
@@ -1002,7 +1010,16 @@ class Database:
                 try:
                     return datetime.strptime(s, "%Y-%m-%d").date()
                 except Exception:
-                    return None
+                    try:
+                        return datetime.strptime(s, "%m-%d-%Y").date()
+                    except Exception:
+                        try:
+                            return datetime.fromisoformat(s).date()
+                        except Exception:
+                            return None
+
+            def fmt_date(d) -> str:
+                return d.strftime("%m-%d-%Y")
 
             done_by_user: dict[int, set] = {}
             dates_by_user: dict[int, set] = {}
@@ -1055,7 +1072,7 @@ class Database:
                 if cur_len > max_len:
                     max_len = cur_len
                     best_end = dates[-1]
-                return f"{max_len} Days on {best_end.strftime('%B %d, %Y')}"
+                return f"{max_len} Days on {fmt_date(best_end)}"
 
             def current_streak_for_done(done_set: set) -> int:
                 if not done_set:
@@ -1102,12 +1119,17 @@ class Database:
             unstoppable_rank = 1 + sum(s > current_streak for s in other_streaks)
             total_users = len(all_users)
 
+            since_days = (today - earliest_date).days
+            last_7 = pct_for_period(day_7_start, today)
+            last_30 = "N/A" if since_days < 30 else pct_for_period(day_30_start, today)
+            last_90 = "N/A" if since_days < 90 else pct_for_period(day_90_start, today)
+
             stats = f"""DME Completion Rate:
             Today: {today_pct()}
-            Last 7 Days: {pct_for_period(day_7_start, today)}
-            Last 30 Days: {pct_for_period(day_30_start, today)}
-            Last 90 Days: {pct_for_period(day_90_start, today)}
-            Since starting: {pct_for_period(earliest_date, today)}
+            Last 7 Days: {last_7}
+            Last 30 Days: {last_30}
+            Last 90 Days: {last_90}
+            Since starting ({fmt_date(earliest_date)}): {pct_for_period(earliest_date, today)}
             Longest Streak: {longest_streak_str()}
             UNSTOPPABLE Rank: {unstoppable_rank} of {total_users}
             Badges Earned: ({len(badges)}) - {', '.join(badges) if badges else 'None'}"""

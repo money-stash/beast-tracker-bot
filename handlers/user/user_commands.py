@@ -31,7 +31,7 @@ async def start_private(msg: Message, bot: Bot, user_id: int):
 async def start_group(msg: Message):
     await msg.answer(
         "Hey there Unstoppable! To get started with the bot, follow these instructions:\n"
-        "1. Send a DM to the bot at: @TULDMEbot\n"
+        "1. Send a DM to the bot at: @myDMEbot\n"
         "2. Send the first message as: /start\n"
         "3. To add a DME: click DME -> +DME -> write your DME.\n\n"
         "Everyday, once you complete your DME, go to your DM with the bot, and let it know you did it:\n"
