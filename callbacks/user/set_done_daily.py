@@ -6,6 +6,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
+from callbacks.user.notify_group_done import notify_group_dme_done
 from database.db import db
 from utils.logger import logger
 
@@ -112,14 +113,15 @@ async def is_remove_daily_task(call: CallbackQuery, bot: Bot, state: FSMContext)
 
     all_ready = False
     if all(task.is_done for task in daily_user):
-        kb_btns.append(
-            [
-                InlineKeyboardButton(
-                    text="Notify Group",
-                    callback_data="notify_group_dme_done",
-                )
-            ]
-        )
+        # kb_btns.append(
+        #     [
+        #         InlineKeyboardButton(
+        #             text="Notify Group",
+        #             callback_data="notify_group_dme_done",
+        #         )
+        #     ]
+        # )
+        await notify_group_dme_done(call=call, bot=bot, user_id=user_id)
         all_ready = True
 
     kb_btns.append(

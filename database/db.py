@@ -60,7 +60,9 @@ class Database:
     ##########      User methods        ##########
     ##########                          ##########
 
-    async def create_user(self, user_id: int, first_name: str, username: str):
+    async def create_user(
+        self, user_id: int, first_name: str, last_name: str, username: str
+    ):
         async with self.get_session() as session:
             result = await session.execute(select(User).where(User.user_id == user_id))
             user = result.scalar_one_or_none()
@@ -72,6 +74,7 @@ class Database:
                     first_name=first_name,
                     username=username,
                     reg_date=reg_date,
+                    last_name=last_name,
                 )
                 session.add(user)
                 await session.commit()
@@ -1212,24 +1215,29 @@ class Database:
 
             users_map = {u.user_id: u for u in await self.get_users()}
 
-            text = "🥇 LEADER bord\n\n"
-            text += "top streaks:\n"
+            def fmt_name(u) -> str:
+                if not u:
+                    return "Unknown"
+                ln = getattr(u, "last_name", None)
+                if ln and isinstance(ln, str) and ln.strip():
+                    first_letter = next((c for c in ln.strip() if c.isalpha()), "")
+                    if first_letter:
+                        return f"{u.first_name} {first_letter.upper()}."
+                return f"{u.first_name}"
+
+            text = "🏆 Leaderboard\n\n"
+            text += "Top streaks:\n"
             for idx, (uid, streak) in enumerate(top_streaks[:5], start=1):
                 user = users_map.get(uid)
-                if user:
-                    text += f"{idx}. {user.first_name}({uid}), streak: {streak}\n"
-                else:
-                    text += f"{idx}. user_id: {uid}, streak: {streak}\n"
+                text += f"{idx}. {fmt_name(user)}, streak: {streak}\n"
 
-            if biggest_gap_user:
-                text += f"\nbiggest comeback:\nuser_id: {biggest_gap_user}, gap: {biggest_gap} days, comeback streak: {comeback_streak}\n"
+            if biggest_gap_user is not None and biggest_gap >= 0:
+                u = users_map.get(biggest_gap_user)
+                text += f"\nBiggest comeback:\n{fmt_name(u)}, gap: {biggest_gap} days, comeback streak: {comeback_streak}\n"
 
-            if most_consistent_user:
+            if most_consistent_user is not None:
                 u = users_map.get(most_consistent_user)
-                if u:
-                    text += f"\nmost consistent this month:\nuser_id: {u.user_id}, first_name: {u.first_name}, username: @{u.username if u.username else 'None'}, done days: {most_consistent_count}\n"
-                else:
-                    text += f"\nmost consistent this month:\nuser_id: {most_consistent_user}, done days: {most_consistent_count}\n"
+                text += f"\nMost consistent this month:\n{fmt_name(u)}, completed days: {most_consistent_count}\n"
 
             return text
 

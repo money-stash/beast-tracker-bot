@@ -1,22 +1,21 @@
+import os
+import json
+from datetime import date
+
 from aiogram import Router, F, Bot
 from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
-from aiogram.fsm.context import FSMContext
-
-import os
-import json
-from datetime import date
 
 from database.db import db
 from utils.logger import logger
 from utils.json_utils import get_group_id
 
-router = Router()
+from config import NOTIFY_LOG_PATH
 
-NOTIFY_LOG_PATH = "database/notify_log.json"
+router = Router()
 
 
 def _load_notify_log():
@@ -51,26 +50,10 @@ def _mark_notified_today(user_id: int) -> None:
     _save_notify_log(data)
 
 
-@router.callback_query(F.data == "notify_group_dme_done")
-async def notify_group_dme_done(
-    call: CallbackQuery, bot: Bot, state: FSMContext, user_id: int
-):
+# @router.callback_query(F.data == "notify_group_dme_done")
+async def notify_group_dme_done(call: CallbackQuery, bot: Bot, user_id: int):
     user_id = call.from_user.id
-    # if _has_notified_today(user_id):
-    #     try:
-    #         await call.answer(
-    #             "You have already notified the group today.", show_alert=True
-    #         )
-    #         await bot.edit_message_text(
-    #             chat_id=user_id,
-    #             message_id=call.message.message_id,
-    #             text="You have already sent today's DME notification.",
-    #         )
-    #     except Exception as e:
-    #         logger.error(f"Failed to inform about duplicate notify: {e}")
-    #     return
     crnt_strak = await db.get_current_daily_streak(user_id)
-    print(f"Current Streak: {crnt_strak}")
 
     daily_user = await db.get_daily_tasks(user_id)
 

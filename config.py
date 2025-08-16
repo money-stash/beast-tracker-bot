@@ -8,6 +8,7 @@ TOKEN = "8320007828:AAEP5V4hmMOXqLSY5mijPqqa0M5M5pQ-aU0"
 ADMIN_ID = [7742837753, 618500315]
 DB_PATH = "database/database.db"
 DATA_JSON = "database/data.json"
+NOTIFY_LOG_PATH = "database/notify_log.json"
 
 us_tz = timezone("US/Eastern")
 scheduler = AsyncIOScheduler(timezone=us_tz)
