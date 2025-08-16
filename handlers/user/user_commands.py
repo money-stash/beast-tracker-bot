@@ -15,7 +15,9 @@ async def start_private(msg: Message, bot: Bot, user_id: int):
     username = msg.from_user.username
     last_name = msg.from_user.last_name
 
-    await db.create_user(user_id, first_name, username, last_name=last_name)
+    await db.create_user(
+        user_id=user_id, first_name=first_name, username=username, last_name=last_name
+    )
 
     if user_id in ADMIN_ID:
         kb = await get_main_menu(is_admin=True)
