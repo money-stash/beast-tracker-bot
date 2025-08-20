@@ -1241,5 +1241,18 @@ class Database:
 
             return text
 
+    async def get_user_short_name(self, user_id: int) -> str:
+        users = await self.get_users()
+        user = next((u for u in users if u.user_id == user_id), None)
+        if not user:
+            return "Unknown"
+
+        ln = getattr(user, "last_name", None)
+        if ln and isinstance(ln, str) and ln.strip():
+            first_letter = next((c for c in ln.strip() if c.isalpha()), "")
+            if first_letter:
+                return f"{user.first_name} {first_letter.upper()}."
+        return f"{user.first_name}"
+
 
 db = Database()

@@ -115,9 +115,10 @@ async def notify_group_dme_done(call: CallbackQuery, bot: Bot, user_id: int):
         else:
             msg_text = "❗️ Select the DME you want to mark as completed"
 
+        user_short_name = await db.get_user_short_name(user_id)
         await bot.send_message(
             chat_id=group_id,
-            text=f"{user_info.first_name} has completed his DME!✅ - {users_uncompleted} UNSTOPPABLES remaining for 100%",
+            text=f"{user_short_name} has completed his DME!✅ - {users_uncompleted} UNSTOPPABLES remaining for 100%",
         )
         _mark_notified_today(user_id)
         await call.answer("Group notified successfully!", show_alert=True)
