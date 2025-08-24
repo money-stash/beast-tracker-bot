@@ -21,6 +21,29 @@ async def get_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
     return kb
 
 
+async def get_user_schedulers_menu() -> InlineKeyboardMarkup:
+    kb_btns = [
+        [
+            InlineKeyboardButton(text="‼️ DME", callback_data="daily_tasks"),
+            InlineKeyboardButton(text="🎯 Challenges", callback_data="user_challenges"),
+        ],
+        [
+            InlineKeyboardButton(text="👤 Profile", callback_data="profile"),
+        ],
+    ]
+    kb_btns.append(
+        [
+            InlineKeyboardButton(
+                text="🏋️‍♀️ Daily Motivation Broadcast",
+                callback_data="open_motivation",
+            )
+        ],
+    )
+
+    kb = InlineKeyboardMarkup(inline_keyboard=kb_btns, resize_keyboard=True)
+    return kb
+
+
 async def get_profile_keyboard() -> InlineKeyboardMarkup:
     kb_btns = [
         [InlineKeyboardButton(text="📊 Statistic", callback_data="user_statistic")],

@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from database.db import db
-from middlewares.user import get_challenges_menu
+from keyboards.inline.user import get_challenges_menu
 
 router = Router()
 

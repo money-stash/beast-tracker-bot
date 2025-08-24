@@ -1,10 +1,11 @@
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 
-from middlewares.user import get_daily_menu, get_main_menu
+from keyboards.inline.user import get_daily_menu, get_main_menu
 
 from database.db import db
-from config import ADMIN_ID
+from utils.json_utils import get_admins, get_schedulers
+from keyboards.inline.user import get_user_schedulers_menu
 
 
 router = Router()
@@ -13,8 +14,10 @@ router = Router()
 @router.callback_query(F.data == "back_to_main")
 async def back_to_main(call: CallbackQuery, bot: Bot, user_id: int):
 
-    if user_id in ADMIN_ID:
+    if user_id in get_admins():
         kb = await get_main_menu(is_admin=True)
+    elif user_id in get_schedulers():
+        kb = await get_user_schedulers_menu()
     else:
         kb = await get_main_menu(is_admin=False)
 

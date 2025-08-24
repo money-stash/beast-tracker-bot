@@ -1,6 +1,6 @@
 from aiogram import Bot
 from database.db import db
-from middlewares.user import get_daily_ok
+from keyboards.inline.user import get_daily_ok
 
 
 async def send_schedul_msg(bot: Bot, msg_id):

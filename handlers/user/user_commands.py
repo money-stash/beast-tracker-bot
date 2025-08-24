@@ -3,8 +3,9 @@ from aiogram.types import Message
 from aiogram.enums import ChatType
 
 from database.db import db
-from middlewares.user import get_main_menu
-from config import ADMIN_ID
+from keyboards.inline.user import get_main_menu
+from utils.json_utils import get_admins, get_schedulers
+from keyboards.inline.user import get_user_schedulers_menu
 
 router = Router()
 
@@ -19,8 +20,10 @@ async def start_private(msg: Message, bot: Bot, user_id: int):
         user_id=user_id, first_name=first_name, username=username, last_name=last_name
     )
 
-    if user_id in ADMIN_ID:
+    if user_id in get_admins():
         kb = await get_main_menu(is_admin=True)
+    elif user_id in get_schedulers():
+        kb = await get_user_schedulers_menu()
     else:
         kb = await get_main_menu()
 
