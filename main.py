@@ -1,6 +1,6 @@
+import asyncio
 from apscheduler.triggers.cron import CronTrigger
 
-import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.default import DefaultBotProperties
@@ -20,6 +20,7 @@ from callbacks.user import (
     exec_challenge,
     open_daily_statistic,
     notify_group_done,
+    open_challenge_stats,
 )
 from callbacks.admin import (
     open_admin,
@@ -68,6 +69,32 @@ from config import TOKEN, us_tz, scheduler
 async def scheduled_task(bot: Bot):
     print("scheduled_task successffully executed")
     await db.cleanup_daily_tasks()
+
+
+async def challenge_checker(bot: Bot):
+    print("challenge_checker successfully executed")
+    challenges = await db.get_all_challenges()
+    for challenge in challenges:
+        if await db.is_challenge_expired(challenge.id):
+            print(f"Challenge {challenge.id} is expired")
+
+            users = await db.get_users()
+            for user in users:
+                try:
+                    stats_text = await db.get_mini_challenge_stats(
+                        user.user_id, challenge.id
+                    )
+                    await bot.send_message(
+                        user.user_id,
+                        f"Challenge {challenge.id} is expired.\n\nYour stats:\n{stats_text}",
+                    )
+                except Exception as e:
+                    pass
+
+            await db.delete_challenge(challenge.id)
+
+        else:
+            print(f"Challenge {challenge.id} is still active")
 
 
 async def main():
@@ -127,18 +154,25 @@ async def main():
         open_perm.router,
         set_perm.router,
         notify_group_done.router,
+        open_challenge_stats.router,
     )
 
     scheduler.add_job(
         scheduled_task, CronTrigger(hour=2, minute=0, timezone=us_tz), args=[bot]
     )
     scheduler.add_job(
+        challenge_checker, CronTrigger(hour=2, minute=0, timezone=us_tz), args=[bot]
+    )
+    scheduler.add_job(
         db.back_daily_to_history, CronTrigger(hour=2, minute=0, timezone=us_tz)
     )
-    await db.back_daily_to_history()
+    # await db.back_daily_to_history()
     scheduler.add_job(
         db.check_all_challenges_today, CronTrigger(hour=2, minute=0, timezone=us_tz)
     )
+    # await db.check_all_challenges_today()
+
+    # notifier
     scheduler.add_job(
         shchedule_daily_remainders,
         CronTrigger(hour=7, minute=0, timezone=us_tz),
@@ -165,6 +199,7 @@ async def main():
         args=[bot],
     )
 
+    # backup
     scheduler.add_job(
         schedule_daily_db_backup,
         CronTrigger(hour=12, minute=00, timezone=us_tz),

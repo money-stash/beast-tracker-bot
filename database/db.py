@@ -211,12 +211,21 @@ class Database:
     async def add_challenge(self, name: str, duration: int, rules: str, action: str):
         async with self.get_session() as session:
             rand_id = randint(1, 1000000)
+            created_date = datetime.now().strftime("%Y-%m-%d")
+
             challenge = MiniChallenge(
-                id=rand_id, name=name, duration=duration, rules=rules, action=action
+                id=rand_id,
+                name=name,
+                created_date=created_date,
+                duration=duration,
+                rules=rules,
+                action=action,
             )
             session.add(challenge)
             await session.commit()
-            logger.info(f"Challenge '{name}' added")
+            logger.info(
+                f"Challenge '{name}' added with id={rand_id} and date={created_date}"
+            )
 
     async def delete_challenge(self, challenge_id: int):
         async with self.get_session() as session:
@@ -428,7 +437,7 @@ class Database:
                             ChallengeHistory.challenge_id == challenge.id,
                             ChallengeHistory.user_id == user.user_id,
                             ChallengeHistory.date
-                            == datetime.now(timezone(us_tz)).strftime("%Y-%m-%d"),
+                            == datetime.now(us_tz).strftime("%Y-%m-%d"),
                         )
                     )
                     exists = result.scalar_one_or_none()
@@ -1253,6 +1262,212 @@ class Database:
             if first_letter:
                 return f"{user.first_name} {first_letter.upper()}."
         return f"{user.first_name}"
+
+    async def get_mini_challenge_stats(self, user_id: int, challenge_id: int) -> str:
+        async with self.get_session() as session:
+            challenge = await session.execute(
+                select(MiniChallenge).where(MiniChallenge.id == challenge_id)
+            )
+            challenge = challenge.scalar_one_or_none()
+
+            if not challenge:
+                return f"Challenge with ID {challenge_id} not found."
+
+            def parse_date(s):
+                try:
+                    return datetime.strptime(s, "%Y-%m-%d").date()
+                except Exception:
+                    try:
+                        return datetime.strptime(s, "%m-%d-%Y").date()
+                    except Exception:
+                        try:
+                            return datetime.fromisoformat(s).date()
+                        except Exception:
+                            return None
+
+            challenge_start_date = (
+                parse_date(challenge.created_date) if challenge.created_date else None
+            )
+
+            history_rows = await session.execute(
+                select(ChallengeHistory.date, ChallengeHistory.is_executed).where(
+                    ChallengeHistory.user_id == user_id,
+                    ChallengeHistory.challenge_id == challenge_id,
+                )
+            )
+            history_rows = history_rows.all()
+
+            if not history_rows:
+                if challenge_start_date:
+                    return f"""Challenge: {challenge.name}
+    Created: {challenge.created_date}
+    Duration: {challenge.duration} days
+    Completed: 0 days out of 0 days (no data)
+    Progress: 0%"""
+                else:
+                    return f"""Challenge: {challenge.name}
+    Duration: {challenge.duration} days
+    Completed: 0 days out of 0 days (no data)
+    Progress: 0%"""
+
+            def parse_date(s):
+                try:
+                    return datetime.strptime(s, "%Y-%m-%d").date()
+                except Exception:
+                    try:
+                        return datetime.strptime(s, "%m-%d-%Y").date()
+                    except Exception:
+                        try:
+                            return datetime.fromisoformat(s).date()
+                        except Exception:
+                            return None
+
+            valid_dates = []
+            done_dates = set()
+
+            for date_str, is_executed in history_rows:
+                parsed_date = parse_date(date_str) if date_str else None
+                if parsed_date:
+                    valid_dates.append(parsed_date)
+                    if is_executed:
+                        done_dates.add(parsed_date)
+
+            if not valid_dates:
+                return f"""Challenge: {challenge.name}
+    Created: {challenge.created_date if challenge.created_date else 'Not specified'}
+    Duration: {challenge.duration} days
+    Completed: 0 days out of 0 days (invalid dates)
+    Progress: 0%"""
+
+            start_date = min(valid_dates)
+            end_date = max(valid_dates)
+            actual_duration = (end_date - start_date).days + 1
+
+            completed_days = len(done_dates)
+
+            completion_percentage = (
+                round((completed_days / actual_duration) * 100)
+                if actual_duration > 0
+                else 0
+            )
+
+            planned_duration = challenge.duration
+            is_completed = actual_duration >= planned_duration
+
+            stats = f"""Challenge: {challenge.name}
+    Created: {challenge.created_date if challenge.created_date else 'Not specified'}
+    Planned Duration: {planned_duration} days
+    Actually Lasted: {actual_duration} days
+    Completed: {completed_days} days out of {actual_duration} days
+    Progress: {completion_percentage}%"""
+
+            if is_completed:
+                final_completion = round((completed_days / planned_duration) * 100)
+                stats += f"\nStatus: Completed ({final_completion}% of planned)"
+            else:
+                stats += f"\nStatus: In Progress"
+
+            if done_dates:
+                current_streak = self._get_challenge_current_streak(
+                    done_dates, end_date, challenge_start_date
+                )
+                longest_streak = self._get_challenge_longest_streak(
+                    done_dates, challenge_start_date
+                )
+
+                if current_streak > 0:
+                    stats += f"\nCurrent Streak: {current_streak} days"
+                stats += f"\nLongest Streak: {longest_streak} days"
+
+            return stats
+
+    def _get_challenge_current_streak(
+        self, done_dates: set, last_date, challenge_start=None
+    ) -> int:
+        """Calculate current streak (consecutive days from the end)"""
+        if not done_dates or last_date not in done_dates:
+            return 0
+
+        streak = 1
+        current_date = last_date
+
+        while True:
+            prev_date = current_date - timedelta(days=1)
+            if challenge_start and prev_date < challenge_start:
+                break
+            if prev_date in done_dates:
+                streak += 1
+                current_date = prev_date
+            else:
+                break
+
+        return streak
+
+    def _get_challenge_longest_streak(
+        self, done_dates: set, challenge_start=None
+    ) -> int:
+        """Calculate the longest streak for the entire period"""
+        if not done_dates:
+            return 0
+
+        filtered_dates = done_dates
+        if challenge_start:
+            filtered_dates = {d for d in done_dates if d >= challenge_start}
+
+        if not filtered_dates:
+            return 0
+
+        sorted_dates = sorted(filtered_dates)
+        max_streak = 1
+        current_streak = 1
+
+        for i in range(1, len(sorted_dates)):
+            if (sorted_dates[i] - sorted_dates[i - 1]).days == 1:
+                current_streak += 1
+                max_streak = max(max_streak, current_streak)
+            else:
+                current_streak = 1
+
+        return max_streak
+
+    async def is_challenge_expired(self, challenge_id: int) -> bool:
+        async with self.get_session() as session:
+            challenge = await session.execute(
+                select(MiniChallenge).where(MiniChallenge.id == challenge_id)
+            )
+            challenge = challenge.scalar_one_or_none()
+
+            if not challenge:
+                return False  # If challenge not found, consider it as not expired
+
+            if not challenge.created_date or not challenge.duration:
+                return False  # If no creation date or duration, consider as not expired
+
+            def parse_date(s):
+                try:
+                    return datetime.strptime(s, "%Y-%m-%d").date()
+                except Exception:
+                    try:
+                        return datetime.strptime(s, "%m-%d-%Y").date()
+                    except Exception:
+                        try:
+                            return datetime.fromisoformat(s).date()
+                        except Exception:
+                            return None
+
+            # Parse creation date
+            created_date = parse_date(challenge.created_date)
+            if not created_date:
+                return False  # If can't parse date, consider as not expired
+
+            # Get current date
+            today = datetime.now().date()
+
+            # Calculate days passed since creation
+            days_passed = (today - created_date).days
+
+            # Check if more days have passed than the duration
+            return days_passed > challenge.duration
 
 
 db = Database()

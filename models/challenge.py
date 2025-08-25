@@ -7,6 +7,7 @@ class MiniChallenge(Base):
 
     id = Column(Integer)
     name = Column(String, primary_key=True)
+    created_date = Column(String)
     duration = Column(Integer)
     rules = Column(String)
     action = Column(String)

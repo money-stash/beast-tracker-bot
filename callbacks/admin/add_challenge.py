@@ -96,7 +96,7 @@ async def get_challenge_duration(
 
     kb = [
         [InlineKeyboardButton(text="✅ Accept", callback_data="accept_new_challenge")],
-        [InlineKeyboardButton(text="❌ Cancel", callback_data="cancel")],
+        [InlineKeyboardButton(text="❌ Cancel", callback_data="cancel_admin")],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
 

@@ -40,6 +40,14 @@ async def print_user_challenge_info(
     kb.append(
         [
             InlineKeyboardButton(
+                text="📊 Stats", callback_data=f"challenge_stats_{challenge_id}"
+            ),
+        ]
+    )
+
+    kb.append(
+        [
+            InlineKeyboardButton(
                 text="🔙 Back",
                 callback_data=f"user_challenges",
             )
