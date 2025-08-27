@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from apscheduler.triggers.cron import CronTrigger
 
 from aiogram import Bot, Dispatcher
@@ -61,6 +62,11 @@ from callbacks.admin import (
 
 from middlewares.user_info import UserInfoMiddleware
 from utils.remainders import shchedule_daily_remainders, schedule_daily_db_backup
+from utils.json_utils import (
+    get_last_partner_rotation,
+    update_last_partner_rotation,
+    get_rot_freq,
+)
 
 from database.db import db
 from config import TOKEN, us_tz, scheduler
@@ -77,7 +83,6 @@ async def challenge_checker(bot: Bot):
     for challenge in challenges:
         if await db.is_challenge_expired(challenge.id):
             print(f"Challenge {challenge.id} is expired")
-
             users = await db.get_users()
             for user in users:
                 try:
@@ -88,13 +93,24 @@ async def challenge_checker(bot: Bot):
                         user.user_id,
                         f"Challenge {challenge.id} is expired.\n\nYour stats:\n{stats_text}",
                     )
-                except Exception as e:
+                except Exception:
                     pass
-
             await db.delete_challenge(challenge.id)
-
         else:
             print(f"Challenge {challenge.id} is still active")
+
+    last_rotation = get_last_partner_rotation()
+    need_rotation_days = int(get_rot_freq())
+    try:
+        last_date = datetime.strptime(last_rotation, "%d.%m.%Y").date()
+    except Exception:
+        last_date = None
+    today = datetime.now().date()
+    if last_date and (today - last_date).days > need_rotation_days:
+        new_date_str = today.strftime("%d.%m.%Y")
+        update_last_partner_rotation(new_date_str)
+        await db.assign_random_partners()
+        print(f"Partner rotation updated to {new_date_str}")
 
 
 async def main():
@@ -163,6 +179,7 @@ async def main():
     scheduler.add_job(
         challenge_checker, CronTrigger(hour=2, minute=0, timezone=us_tz), args=[bot]
     )
+    # await challenge_checker(bot)
     scheduler.add_job(
         db.back_daily_to_history, CronTrigger(hour=2, minute=0, timezone=us_tz)
     )
@@ -208,7 +225,7 @@ async def main():
 
     scheduler.start()
 
-    await db.assign_random_partners()
+    # await db.assign_random_partners()
     await db.update_leaderboard()
 
     await bot.delete_webhook(drop_pending_updates=True)

@@ -34,6 +34,22 @@ def update_rot_freq(new_freq, file_path: str = DATA_JSON):
         json.dump(data, f, indent=2)
 
 
+def get_last_partner_rotation(file_path: str = DATA_JSON):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        return data["last_partner_rotation"]
+
+
+def update_last_partner_rotation(new_date, file_path: str = DATA_JSON):
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    data["last_partner_rotation"] = new_date
+
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
 def get_dme_hours(file_path: str = DATA_JSON):
     with open(file_path, "r") as f:
         data = json.load(f)
